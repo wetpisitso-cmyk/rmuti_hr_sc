@@ -891,10 +891,20 @@ window.HRViews = (() => {
           btn('ทดลองเป็นบุคลากร', 'role', M.demoUser, 'primary', 'user') +
           btn('ทดลองเป็นเจ้าหน้าที่ HR', 'role', M.demoHR, 'light', 'brief') +
           '</div>'
-        : '<form data-form="login">' +
+        : '<section class="university-sso" aria-label="เข้าระบบด้วยบัญชีมหาวิทยาลัย">' +
+          '<button type="button" class="university-sso-button" data-action="rmuti-sso">' +
+          '<span class="sso-brandmark" aria-hidden="true">S</span>' +
+          '<span>เข้าสู่ระบบด้วย RMUTI SSO</span>' +
+          '</button>' +
+          '<p class="sso-domain">บัญชีมหาวิทยาลัย <strong>@rmuti.ac.th</strong></p>' +
+          (HR_CONFIG.rmutiSso?.enabled
+            ? ''
+            : '<p class="sso-setup-note">อยู่ระหว่างเชื่อมต่อระบบยืนยันตัวตนมหาวิทยาลัย</p>') +
+          '</section><div class="sso-divider"><span>หรือเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน</span></div>' +
+          '<form data-form="login">' +
           field(
-            'อีเมล',
-            input('email', 'type="email" autocomplete="username" required'),
+            'อีเมลมหาวิทยาลัย',
+            input('email', 'type="email" autocomplete="username" inputmode="email" placeholder="name@rmuti.ac.th" required'),
           ) +
           field(
             'รหัสผ่าน',
@@ -904,7 +914,7 @@ window.HRViews = (() => {
             ),
           ) +
           saveButton('เข้าสู่ระบบ', 'arrow') +
-          '</form>') +
+          '</form><p class="sso-approval-note">เฉพาะบัญชีที่ได้รับสิทธิ์จากแผนกงานบริหารงานบุคคลเท่านั้น</p>') +
       '</div></main>'
     );
   }

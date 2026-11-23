@@ -100,7 +100,7 @@ window.HRData = (() => {
       if (!id) return null;
       const s = exampleState(),
         role = s.roles[id],
-        any = role === 'hr';
+        any = role === 'hr' || role === 'admin';
       return {
         id,
         role,
@@ -119,6 +119,7 @@ window.HRData = (() => {
         registrations: s.registrations.filter((r) => r.owner_id === id || any),
         assessments: s.assessments.filter((r) => r.owner_id === id || any),
         workflows: [], workflowEvents: [], officers: [],
+        adminUsers: [], roleAudit: [],
       };
     }
     const session = ok(await db().auth.getSession()).session;
@@ -135,6 +136,12 @@ window.HRData = (() => {
       throw Error(
         'ไม่พบสิทธิ์ใช้งาน กรุณาตรวจสอบว่าได้ยืนยันอีเมลจากลิงก์ที่ส่งไปแล้ว หากยืนยันแล้วให้เข้าสู่ระบบใหม่',
       );
+    const adminInfo = membership.role === 'admin'
+      ? await Promise.all([
+          db().rpc('hr_admin_list_users').then(ok),
+          db().from('hr_role_audit').select('id,actor_id,target_id,old_role,new_role,changed_at').order('changed_at',{ascending:false}).limit(50).then(ok),
+        ])
+      : [[],[]];
     const [
       profiles,
       orgs,
@@ -177,6 +184,8 @@ window.HRData = (() => {
     return {
       id,
       role: membership.role,
+      adminUsers: adminInfo[0],
+      roleAudit: adminInfo[1],
       profile,
       profiles,
       orgs,
@@ -255,7 +264,7 @@ window.HRData = (() => {
       if (!user) throw Error('กรุณาเข้าสู่ระบบ');
       if (
         ['process', 'order', 'activity', 'asset'].includes(action) &&
-        s.roles[user] !== 'hr'
+        !['hr','admin'].includes(s.roles[user])
       )
         throw Error('เฉพาะเจ้าหน้าที่ HR');
       const record = { id: M.uuid(), owner_id: user, created_at: now };
@@ -461,6 +470,13 @@ window.HRData = (() => {
       }
     }
   }
+  async function setUserRole(userId, role) {
+    if (demo) throw Error('การกำหนดสิทธิ์ทำได้ในระบบจริงเท่านั้น');
+    if (!['admin','hr','staff'].includes(role)) throw Error('บทบาทไม่ถูกต้อง');
+    return ok(await db().rpc('hr_admin_set_role', {
+      p_user_id:userId, p_role:role,
+    }));
+  }
   async function proposeDocument(p) {
     if (demo) throw Error('ระบบเสนอเอกสารต้องใช้บัญชี Supabase จริง');
     return ok(await db().rpc('hr_propose_document', {
@@ -504,5 +520,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole };
 })();

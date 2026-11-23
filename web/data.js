@@ -89,6 +89,12 @@ window.HRData = (() => {
       result.push(...page);
     }
   }
+  function isUniversityEmail(email) {
+    const domain = String(cfg.universityEmailDomain || 'rmuti.ac.th').toLowerCase();
+    return typeof email === 'string' &&
+      email.trim().toLowerCase().split('@').length === 2 &&
+      email.trim().toLowerCase().endsWith('@' + domain);
+  }
   async function load() {
     if (demo) {
       const id = exampleSession();
@@ -118,6 +124,10 @@ window.HRData = (() => {
     }
     const session = ok(await db().auth.getSession()).session;
     if (!session) return null;
+    if (!isUniversityEmail(session.user.email)) {
+      await db().auth.signOut({ scope: 'local' });
+      throw Error('ระบบนี้เปิดให้ใช้งานเฉพาะบัญชีอีเมล @rmuti.ac.th ที่ได้รับอนุญาตจาก HR');
+    }
     const id = session.user.id;
     const membership = ok(
       await db().from('hr_members').select('role').eq('id', id).maybeSingle(),
@@ -187,7 +197,9 @@ window.HRData = (() => {
       remember(email === M.demoHR ? M.demoHR : M.demoUser);
       return;
     }
-    ok(await db().auth.signInWithPassword({ email, password }));
+    if (!isUniversityEmail(email))
+      throw Error('กรุณาใช้อีเมลมหาวิทยาลัย @rmuti.ac.th เท่านั้น');
+    ok(await db().auth.signInWithPassword({ email: email.trim().toLowerCase(), password }));
   }
   async function logout() {
     if (demo) remember(null);

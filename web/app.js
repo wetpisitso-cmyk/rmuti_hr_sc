@@ -163,6 +163,29 @@
       file = null,
       target = '';
     switch (kind) {
+      case 'workflow-propose': {
+        if (new Set([data.id,vals.reviewer_id,vals.approver_id,vals.signer_id]).size!==4)
+          throw Error('ผู้เสนอ ผู้ตรวจสอบ ผู้อนุมัติ และผู้ลงนามต้องเป็นคนละคน');
+        await D.proposeDocument(vals);
+        history.replaceState(null,'','#workflow');
+        await refresh();
+        toast('เสนอเอกสารเรียบร้อยแล้ว');
+        return;
+      }
+      case 'workflow-advance': {
+        const r=data.workflows.find(x=>x.id===form.dataset.id);
+        if (!r) throw Error('ไม่พบเอกสาร');
+        if (['return','reject'].includes(vals.decision) && vals.note.length<5) throw Error('กรุณาระบุเหตุผลอย่างน้อย 5 ตัวอักษร');
+        if (vals.decision==='sign' && !window.confirm('ยืนยันลงนามเอกสารนี้ด้วยบัญชีของท่าน?')) return;
+        await D.advanceDocument({id:r.id,revision:r.revision,action:vals.decision,note:vals.note});
+        await refresh(); toast('บันทึกการดำเนินการแล้ว');return;
+      }
+      case 'workflow-revise': {
+        const r=data.workflows.find(x=>x.id===form.dataset.id);
+        if (!r) throw Error('ไม่พบเอกสาร');
+        await D.reviseDocument({id:r.id,revision:r.revision,content:vals.content,note:vals.note});
+        await refresh();toast('ส่งตรวจสอบใหม่แล้ว');return;
+      }
       case 'profile': {
         const org = data.orgs.find((r) =>
           M.orgKeys.every((k) => r[k] === vals[k]),
@@ -347,6 +370,11 @@
           await refresh();
         }
         return;
+      case 'workflow-detail': {
+        const r=data.workflows.find(x=>x.id===id);
+        if (r) modal(HRWorkflow.detail(data,r));
+        return;
+      }
       case 'request-detail': {
         const r = data.requests.find((x) => x.id === id);
         if (r) {

@@ -1,20 +1,22 @@
 name: Deploy HR MIS to GitHub Pages
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
+    name: Package website
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,5 +24,16 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
+
+  deploy:
+    name: Publish website
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Allow artifact metadata to become available
+        run: sleep 12
       - id: deployment
         uses: actions/deploy-pages@v4

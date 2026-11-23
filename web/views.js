@@ -899,6 +899,22 @@ window.HRViews = (() => {
       '<p>หากไม่พบอีเมล ลองตรวจโฟลเดอร์จดหมายขยะ และติดต่อผู้ดูแลระบบหากยังไม่ได้รับ</p></div>'+
       '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button>'+
       '</div></main>';
+    if (mode === 'forgot') return '<main class="login"><div class="login-box">'+brand+
+      '<h2 class="auth-subtitle">ตั้งรหัสผ่านใหม่</h2><p class="intro">กรอกอีเมลมหาวิทยาลัยที่ใช้สมัคร เพื่อรับลิงก์ตั้งรหัสผ่านใหม่</p>'+
+      '<form data-form="forgot-password">'+
+      field('อีเมลมหาวิทยาลัย',input('email','type="email" autocomplete="email" placeholder="name@rmuti.ac.th" required'))+
+      saveButton('ส่งอีเมลตั้งรหัสผ่านใหม่','arrow')+'</form>'+
+      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button></div></main>';
+    if (mode === 'reset-sent') return '<main class="login"><div class="login-box">'+brand+
+      '<div class="auth-success"><h2>ตรวจสอบกล่องจดหมายของคุณ</h2>'+
+      '<p>หากอีเมลนี้มีบัญชีอยู่ ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ให้</p></div>'+
+      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button></div></main>';
+    if (mode === 'recover') return '<main class="login"><div class="login-box">'+brand+
+      '<h2 class="auth-subtitle">กำหนดรหัสผ่านใหม่</h2>'+
+      '<form data-form="set-password">'+
+      field('รหัสผ่านใหม่ (อย่างน้อย 10 ตัวอักษร)',input('password','type="password" minlength="10" autocomplete="new-password" required'))+
+      field('ยืนยันรหัสผ่านใหม่',input('confirm_password','type="password" minlength="10" autocomplete="new-password" required'))+
+      saveButton('บันทึกรหัสผ่านใหม่','save')+'</form></div></main>';
     if (mode === 'register') return '<main class="login"><div class="login-box">'+brand+
       '<h2 class="auth-subtitle">ลงทะเบียนบุคลากรใหม่</h2>'+emailInfo+
       '<p class="intro">สมัครด้วยอีเมลมหาวิทยาลัยและยืนยันอีเมลด้วยตัวเอง ไม่ต้องรอ Admin อนุมัติ</p>'+

@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
       .select("id,owner_id,status,document_path").eq("id", requestId).maybeSingle();
     if (readError || !record) return json({ error: "ไม่พบคำขอ" }, 404, origin);
     if (action === "upload") {
-      if (member.role !== "hr") return json({ error: "เฉพาะเจ้าหน้าที่ HR" }, 403, origin);
+      if (!["hr","admin"].includes(member.role)) return json({ error: "เฉพาะเจ้าหน้าที่ HR" }, 403, origin);
       if (record.status !== "review" || previous !== "review")
         return json({ error: "สถานะคำขอเปลี่ยนแล้ว กรุณาโหลดใหม่" }, 409, origin);
       if (!note.trim() || note.length > 600)
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
       return json({ success: true, file_id: id }, 200, origin);
     }
     if (action === "download") {
-      if (member.role !== "hr" && record.owner_id !== user.id)
+      if (!["hr","admin"].includes(member.role) && record.owner_id !== user.id)
         return json({ error: "ไม่มีสิทธิ์อ่านเอกสาร" }, 403, origin);
       if (!["ready", "done"].includes(record.status) ||
         !/^drive:[A-Za-z0-9_-]{10,200}$/.test(record.document_path ?? ""))

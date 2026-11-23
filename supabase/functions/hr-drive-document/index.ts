@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
   if (authError || !user) return json({ error: "สิทธิ์เข้าสู่ระบบไม่ถูกต้อง" }, 401, origin);
   // Domain and email confirmation are server-side conditions, not a browser-only check.
   if (!user.email_confirmed_at ||
-      !/^[^\\s@]+@rmuti\\.ac\\.th$/i.test((user.email ?? "").trim()) ||
+      !/^[^\s@]+@rmuti\.ac\.th$/i.test((user.email ?? "").trim()) ||
       user.is_anonymous === true) {
     return json({ error: "กรุณายืนยันอีเมลมหาวิทยาลัยก่อนใช้เอกสาร" }, 403, origin);
   }

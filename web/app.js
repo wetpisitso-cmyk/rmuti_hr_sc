@@ -333,6 +333,29 @@
       case 'reload':
         await refresh();
         return;
+      case 'rmuti-sso': {
+        // การยืนยันตัวตนจริงต้องผ่านระบบ OAuth server-to-server ที่อนุมัติจาก RMUTI
+        // ห้ามส่งรหัสลับของ RMUTI ไปยังหน้าบราวเซอร์หรือเปิดลิงก์ OAuth โดยไม่มี callback ตรวจสอบ
+        const config = HR_CONFIG.rmutiSso || {};
+        if (config.enabled && typeof config.startUrl === 'string') {
+          try {
+            const dest = new URL(config.startUrl);
+            if (dest.protocol === 'https:' &&
+                dest.origin === new URL(HR_CONFIG.supabaseUrl).origin &&
+                dest.pathname === '/functions/v1/rmuti-sso-start') {
+              window.location.assign(dest.href);
+              return;
+            }
+          } catch {}
+        }
+        modal(
+          '<h2>เข้าสู่ระบบด้วย RMUTI SSO</h2>' +
+          '<p>เพิ่มปุ่มตามรูปแบบมหาวิทยาลัยแล้ว แต่ยังไม่เปิดการยืนยันตัวตนจริง เพราะต้องลงทะเบียนบริการกับผู้ดูแล RMUTI API และตั้งค่า OAuth ที่ฝั่งเซิร์ฟเวอร์ก่อน</p>' +
+          '<p>ระหว่างนี้สามารถเข้าสู่ระบบด้วยอีเมล <strong>@rmuti.ac.th</strong> และรหัสผ่านที่ Admin จัดเตรียมไว้ได้ตามปกติ</p>' +
+          '<p class="intro">แม้ยืนยันตัวตนผ่าน SSO แล้ว ก็ต้องมีสิทธิ์ในทะเบียนบุคลากรของระบบก่อน</p>'
+        );
+        return;
+      }
       case 'logout':
         await D.logout();
         adminTab = 'queue';

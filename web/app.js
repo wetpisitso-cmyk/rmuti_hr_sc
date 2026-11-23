@@ -7,6 +7,7 @@
     dialog = document.querySelector('#detail');
   let data = null,
     page = 'profile',
+    authMode = 'login',
     adminTab = 'queue',
     busy = false,
     stamp = 0,
@@ -43,7 +44,7 @@
     document.body.classList.remove('menu-open');
     if (dialog.open) dialog.close();
     if (!data) {
-      app.innerHTML = V.login();
+      app.innerHTML = V.login(authMode);
       return;
     }
     const route = location.hash.slice(1);
@@ -156,7 +157,34 @@
     const kind = form.dataset.form;
     if (kind === 'login') {
       await D.login(vals.email, form.elements.password.value);
+      authMode = 'login';
       await refresh();
+      return;
+    }
+    if (kind === 'signup') {
+      if (vals.password !== vals.confirm_password)
+        throw Error('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+      await D.signup({
+        prefix:vals.prefix,first_name:vals.first_name,last_name:vals.last_name,
+        email:vals.email,password:vals.password
+      });
+      authMode='sent';
+      render();
+      return;
+    }
+    if (kind === 'forgot-password') {
+      await D.resetPassword(vals.email);
+      authMode='reset-sent';
+      render();
+      return;
+    }
+    if (kind === 'set-password') {
+      if (vals.password!==vals.confirm_password) throw Error('รหัสผ่านไม่ตรงกัน');
+      await D.updatePassword(vals.password);
+      authMode='login';
+      await D.logout();
+      await refresh();
+      toast('เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบอีกครั้ง');
       return;
     }
     let payload = vals,
@@ -332,6 +360,18 @@
         return;
       case 'reload':
         await refresh();
+        return;
+      case 'show-signup':
+        authMode='register';
+        render();
+        return;
+      case 'show-login':
+        authMode='login';
+        render();
+        return;
+      case 'show-forgot':
+        authMode='forgot';
+        render();
         return;
       case 'rmuti-sso': {
         // การยืนยันตัวตนจริงต้องผ่านระบบ OAuth server-to-server ที่อนุมัติจาก RMUTI

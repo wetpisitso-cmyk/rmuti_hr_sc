@@ -181,6 +181,7 @@ window.HRViews = (() => {
       group(M.groups[0], 0) +
       '<div class="nav-caption">บริการระบบสารสนเทศ</div>' +
       M.groups.slice(1).map(group).join('') +
+      single('workflow', 'file') +
       single('performance', 'performance') +
       single('services', 'globe') +
       (d.role === 'hr' ? single('admin', 'brief') : '') +
@@ -633,6 +634,8 @@ window.HRViews = (() => {
             link('requests', 'ดูทั้งหมด'),
           )
         );
+      case 'workflow':
+        return HRWorkflow.page(d);
       case 'profile':
         body = profile(d);
         break;

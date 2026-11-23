@@ -883,41 +883,54 @@ window.HRViews = (() => {
         : '')
     );
   }
-  function login() {
-    return (
-      '<main class="login"><div class="login-box"><span class="brandmark">hr</span><p class="kicker">มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น</p><h1>ระบบสารสนเทศบุคลากร</h1>' +
-      (HRData.demo
-        ? '<p class="intro">เลือกบทบาทเพื่อทดลองใช้งานด้วยข้อมูลสมมติ</p><div class="login-roles">' +
-          btn('ทดลองเป็นบุคลากร', 'role', M.demoUser, 'primary', 'user') +
-          btn('ทดลองเป็นเจ้าหน้าที่ HR', 'role', M.demoHR, 'light', 'brief') +
-          '</div>'
-        : '<section class="university-sso" aria-label="เข้าระบบด้วยบัญชีมหาวิทยาลัย">' +
-          '<button type="button" class="university-sso-button" data-action="rmuti-sso">' +
-          '<span class="sso-brandmark" aria-hidden="true">S</span>' +
-          '<span>เข้าสู่ระบบด้วย RMUTI SSO</span>' +
-          '</button>' +
-          '<p class="sso-domain">บัญชีมหาวิทยาลัย <strong>@rmuti.ac.th</strong></p>' +
-          (HR_CONFIG.rmutiSso?.enabled
-            ? ''
-            : '<p class="sso-setup-note">อยู่ระหว่างเชื่อมต่อระบบยืนยันตัวตนมหาวิทยาลัย</p>') +
-          '</section><div class="sso-divider"><span>หรือเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน</span></div>' +
-          '<form data-form="login">' +
-          field(
-            'อีเมลมหาวิทยาลัย',
-            input('email', 'type="email" autocomplete="username" inputmode="email" placeholder="name@rmuti.ac.th" required'),
-          ) +
-          field(
-            'รหัสผ่าน',
-            input(
-              'password',
-              'type="password" autocomplete="current-password" required',
-            ),
-          ) +
-          saveButton('เข้าสู่ระบบ', 'arrow') +
-          '</form><p class="sso-approval-note">เฉพาะบัญชีที่ได้รับสิทธิ์จากแผนกงานบริหารงานบุคคลเท่านั้น</p>') +
-      '</div></main>'
-    );
+  function login(mode = 'login') {
+    const brand='<div class="auth-heading"><span class="brandmark">hr</span>' +
+      '<p class="kicker">มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น</p>' +
+      '<h1>ระบบสารสนเทศบุคลากร</h1></div>';
+    if (HRData.demo) return '<main class="login"><div class="login-box">' +brand+
+      '<p class="intro">เลือกบทบาทเพื่อทดลองใช้งานด้วยข้อมูลสมมติ</p><div class="login-roles">'+
+      btn('ทดลองเป็นบุคลากร','role',M.demoUser,'primary','user')+
+      btn('ทดลองเป็นเจ้าหน้าที่ HR','role',M.demoHR,'light','brief')+'</div></div></main>';
+    const emailInfo='<p class="sso-domain">สำหรับอีเมลมหาวิทยาลัย <strong>@rmuti.ac.th</strong> เท่านั้น</p>';
+    if (mode === 'sent') return '<main class="login"><div class="login-box">'+brand+
+      '<div class="auth-success" role="status"><h2>กรุณาตรวจสอบอีเมลของคุณ</h2>'+
+      '<p>ระบบรับคำขอสมัครแล้ว โปรดเปิดกล่องจดหมายมหาวิทยาลัยและกดลิงก์ยืนยันอีเมล</p>'+
+      '<p>หลังยืนยันเสร็จ ให้กลับมาที่ระบบเพื่อเข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่ตั้งไว้</p>'+
+      '<p>หากไม่พบอีเมล ลองตรวจโฟลเดอร์จดหมายขยะ และติดต่อผู้ดูแลระบบหากยังไม่ได้รับ</p></div>'+
+      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button>'+
+      '</div></main>';
+    if (mode === 'register') return '<main class="login"><div class="login-box">'+brand+
+      '<h2 class="auth-subtitle">ลงทะเบียนบุคลากรใหม่</h2>'+emailInfo+
+      '<p class="intro">สมัครด้วยอีเมลมหาวิทยาลัยและยืนยันอีเมลด้วยตัวเอง ไม่ต้องรอ Admin อนุมัติ</p>'+
+      '<form data-form="signup" autocomplete="on">'+
+      '<div class="auth-two-col">'+
+      field('คำนำหน้าชื่อ',select('prefix',[
+        opt('','กรุณาเลือก'),opt('นาย','นาย'),opt('นาง','นาง'),opt('นางสาว','นางสาว'),
+        opt('ดร.','ดร.'),opt('ผศ.','ผศ.'),opt('รศ.','รศ.'),opt('ศ.','ศ.')
+      ].join(''),'required'))+
+      field('ชื่อจริง',input('first_name','required autocomplete="given-name" minlength="1" maxlength="80"'))+
+      '</div>'+
+      field('นามสกุล',input('last_name','required autocomplete="family-name" minlength="1" maxlength="80"'))+
+      field('อีเมลมหาวิทยาลัย',input('email','type="email" autocomplete="email" placeholder="name@rmuti.ac.th" required'))+
+      field('ตั้งรหัสผ่าน (อย่างน้อย 10 ตัวอักษร)',input('password','type="password" minlength="10" maxlength="128" autocomplete="new-password" required'))+
+      field('ยืนยันรหัสผ่าน',input('confirm_password','type="password" minlength="10" maxlength="128" autocomplete="new-password" required'))+
+      '<p class="sso-approval-note">สิทธิ์เริ่มต้นคือ “บุคลากร” (Staff) โดยไม่สามารถอนุมัติหรือลงนามแทน HR ได้</p>'+
+      saveButton('สมัครสมาชิกและส่งอีเมลยืนยัน','arrow')+'</form>'+
+      '<button type="button" class="auth-switch" data-action="show-login">มีบัญชีแล้ว? เข้าสู่ระบบ</button>'+
+      '</div></main>';
+    return '<main class="login"><div class="login-box">'+brand+
+      '<h2 class="auth-subtitle">เข้าสู่ระบบบุคลากร</h2>'+emailInfo+
+      '<form data-form="login">'+
+      field('อีเมลมหาวิทยาลัย',input('email','type="email" autocomplete="username" placeholder="name@rmuti.ac.th" required'))+
+      field('รหัสผ่าน',input('password','type="password" autocomplete="current-password" required'))+
+      saveButton('เข้าสู่ระบบ','arrow')+'</form>'+
+      '<div class="auth-links">'+
+      '<button type="button" class="auth-switch" data-action="show-signup">สมัครสมาชิกด้วยอีเมลมหาวิทยาลัย</button>'+
+      '<button type="button" class="auth-switch" data-action="show-forgot">ลืมรหัสผ่าน</button>'+
+      '</div><p class="sso-approval-note">ผู้สมัครใหม่ต้องยืนยันอีเมลก่อนใช้งาน ไม่ใช่ระบบ RMUTI SSO</p>'+
+      '</div></main>';
   }
+
   return {
     layout,
     page,

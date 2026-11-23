@@ -43,7 +43,7 @@
   function render() {
     document.body.classList.remove('menu-open');
     if (dialog.open) dialog.close();
-    if (!data) {
+    if (!data || authMode==='recover') {
       app.innerHTML = V.login(authMode);
       return;
     }
@@ -550,7 +550,13 @@
   document.addEventListener('keydown', (ev) => {
     if (ev.key === 'Escape') document.body.classList.remove('menu-open');
   });
-  window.addEventListener('hr-session-ended', () => refresh());
+  window.addEventListener('hr-session-ended', () => {
+    if(authMode!=='recover') refresh();
+  });
+  window.addEventListener('hr-password-recovery',()=>{
+    authMode='recover';
+    render();
+  });
   if (!D.demo)
     window.addEventListener('pageshow', (ev) => {
       if (ev.persisted) refresh();

@@ -1260,3 +1260,30 @@ dialog h2,
     break-inside: avoid;
   }
 }
+
+
+/* Document approval workflow */
+.workflow-steps{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
+.workflow-steps span{border:1px solid #cbd8e7;background:#eff5fb;color:#17324f;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:700}
+.workflow-status{display:inline-flex;white-space:nowrap;font-weight:700;border-radius:50px;padding:5px 10px;font-size:12px;background:#fff3e0;color:#985c03}
+.workflow-status.st-signed{background:#e7f6ef;color:#0e6e48}
+.workflow-status.st-rejected{background:#ffecec;color:#a12f30}
+.workflow-status.st-returned{background:#fff1db;color:#a55c10}
+.workflow-document h2{margin:6px 0}
+.workflow-body{border:1px solid #d9e3ee;border-radius:12px;padding:20px;min-height:120px;white-space:pre-wrap;line-height:1.9;overflow-wrap:anywhere;color:#22364b;background:white}
+.workflow-signed{text-align:center;max-width:310px;margin:35px 0 16px auto}
+.workflow-signature{display:block;margin:0 auto;width:220px;height:90px}
+.workflow-signed p{margin:2px 0}
+.workflow-hash{font-size:12px;margin-top:25px;color:#526176;overflow-wrap:anywhere}
+.workflow-disclaimer{font-size:11px;color:#687487;margin-top:10px}
+.workflow-history{padding-left:25px}
+.workflow-history li{padding:8px 0;border-bottom:1px solid #e7ebf0}
+.workflow-history p{font-size:13px;margin:4px 0}
+.workflow-document + .no-print form,form[data-form^="workflow-"]{margin-top:15px}
+@media print{
+ .workflow-document{color:black}
+ .workflow-body{border:0;padding:0;min-height:0}
+ .workflow-status{border:1px solid #777}
+ .workflow-signature{max-height:30mm}
+ .workflow-disclaimer{color:#555}
+}

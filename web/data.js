@@ -59,7 +59,7 @@ window.HRData = (() => {
     )
       throw Error('ตรวจ Project URL และ Publishable key ใน config.js');
     client = supabase.createClient(host.origin, cfg.publishableKey, {
-      auth: { storage: sessionStorage, detectSessionInUrl: false },
+      auth: { storage: sessionStorage, detectSessionInUrl: true },
     });
     client.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT')
@@ -124,9 +124,9 @@ window.HRData = (() => {
     }
     const session = ok(await db().auth.getSession()).session;
     if (!session) return null;
-    if (!isUniversityEmail(session.user.email)) {
+    if (!isUniversityEmail(session.user.email) || !session.user.email_confirmed_at) {
       await db().auth.signOut({ scope: 'local' });
-      throw Error('ระบบนี้เปิดให้ใช้งานเฉพาะบัญชีอีเมล @rmuti.ac.th ที่ได้รับอนุญาตจาก HR');
+      throw Error('กรุณายืนยันอีเมลมหาวิทยาลัย @rmuti.ac.th ก่อนเข้าสู่ระบบ');
     }
     const id = session.user.id;
     const membership = ok(
@@ -134,7 +134,7 @@ window.HRData = (() => {
     );
     if (!membership)
       throw Error(
-        'บัญชีนี้ยังไม่ได้รับสิทธิ์ใช้งาน กรุณาให้ HR เพิ่มบัญชีในทะเบียนบุคลากร',
+        'ไม่พบสิทธิ์ใช้งาน กรุณาตรวจสอบว่าได้ยืนยันอีเมลจากลิงก์ที่ส่งไปแล้ว หากยืนยันแล้วให้เข้าสู่ระบบใหม่',
       );
     const [
       profiles,
@@ -200,6 +200,35 @@ window.HRData = (() => {
     if (!isUniversityEmail(email))
       throw Error('กรุณาใช้อีเมลมหาวิทยาลัย @rmuti.ac.th เท่านั้น');
     ok(await db().auth.signInWithPassword({ email: email.trim().toLowerCase(), password }));
+  }
+  async function signup(payload) {
+    if (demo) throw Error('กรุณาใช้โหมดเชื่อม Supabase');
+    const email=String(payload.email||'').trim().toLowerCase();
+    if (!isUniversityEmail(email))
+      throw Error('สมัครได้เฉพาะอีเมลมหาวิทยาลัย @rmuti.ac.th');
+    if (typeof payload.password!=='string' || payload.password.length<10)
+      throw Error('รหัสผ่านต้องมีอย่างน้อย 10 ตัวอักษร');
+    const prefix=String(payload.prefix||'').trim();
+    const first_name=String(payload.first_name||'').trim();
+    const last_name=String(payload.last_name||'').trim();
+    if (!['นาย','นาง','นางสาว','ดร.','ผศ.','รศ.','ศ.'].includes(prefix) ||
+        !first_name || !last_name || first_name.length>80 || last_name.length>80)
+      throw Error('กรุณากรอกชื่อ-นามสกุลให้ครบและถูกต้อง');
+    const redirect=window.location.origin+window.location.pathname;
+    const result=ok(await db().auth.signUp({
+      email,
+      password:payload.password,
+      options:{
+        emailRedirectTo:redirect,
+        data:{prefix,first_name,last_name}
+      }
+    }));
+    // If Confirm email has accidentally been disabled, fail closed in UI and DB.
+    if (result?.session) {
+      await db().auth.signOut({scope:'local'});
+      throw Error('โปรดให้ผู้ดูแลเปิด Confirm email ใน Supabase ก่อนใช้งานระบบสมัครเอง');
+    }
+    return {sent:true};
   }
   async function logout() {
     if (demo) remember(null);
@@ -462,5 +491,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, logout, download, message, proposeDocument, advanceDocument, reviseDocument };
+  return { demo, load, save, login, signup, logout, download, message, proposeDocument, advanceDocument, reviseDocument };
 })();

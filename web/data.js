@@ -63,10 +63,9 @@ window.HRData = (() => {
     });
     client.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT')
-        setTimeout(
-          () => window.dispatchEvent(new Event('hr-session-ended')),
-          0,
-        );
+        setTimeout(() => window.dispatchEvent(new Event('hr-session-ended')),0);
+      if (event === 'PASSWORD_RECOVERY')
+        setTimeout(() => window.dispatchEvent(new Event('hr-password-recovery')),0);
     });
     return client;
   }
@@ -229,6 +228,20 @@ window.HRData = (() => {
       throw Error('โปรดให้ผู้ดูแลเปิด Confirm email ใน Supabase ก่อนใช้งานระบบสมัครเอง');
     }
     return {sent:true};
+  }
+  async function resetPassword(email) {
+    if (demo) throw Error('กรุณาใช้ระบบจริง');
+    if (!isUniversityEmail(email))
+      throw Error('กรุณาใช้อีเมลมหาวิทยาลัย @rmuti.ac.th เท่านั้น');
+    ok(await db().auth.resetPasswordForEmail(email.trim().toLowerCase(),{
+      redirectTo:window.location.origin+window.location.pathname
+    }));
+  }
+  async function updatePassword(password) {
+    if (demo) throw Error('กรุณาใช้ระบบจริง');
+    if (typeof password!=='string' || password.length<10)
+      throw Error('รหัสผ่านต้องมีอย่างน้อย 10 ตัวอักษร');
+    ok(await db().auth.updateUser({password}));
   }
   async function logout() {
     if (demo) remember(null);
@@ -491,5 +504,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, logout, download, message, proposeDocument, advanceDocument, reviseDocument };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument };
 })();

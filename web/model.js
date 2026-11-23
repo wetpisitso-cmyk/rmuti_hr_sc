@@ -63,6 +63,7 @@ window.MIS = (() => {
     terms: 'ข้อกำหนดการใช้งาน',
     contact: 'ติดต่อเรา',
     admin: 'งานเจ้าหน้าที่ HR',
+    workflow: 'ระบบเสนอเอกสารและลงนาม',
   };
   const groups = [
     {

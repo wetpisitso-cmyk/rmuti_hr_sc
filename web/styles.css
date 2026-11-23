@@ -1308,3 +1308,20 @@ dialog h2,
 .sso-divider{display:flex;gap:9px;align-items:center;color:#738292;font-size:11px;margin:22px 0}
 .sso-divider:before,.sso-divider:after{content:"";flex:1;height:1px;background:#dfe5ed}
 .sso-approval-note{margin:16px 0 0;text-align:center;font-size:12px;color:#60758a}
+
+
+/* Institutional self-service registration */
+.auth-heading{text-align:center}
+.auth-heading .brandmark{margin:0 auto}
+.auth-subtitle{font-size:1.08rem;font-weight:750;color:#17365a;margin:16px 0 8px;text-align:center}
+.auth-links{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin-top:16px}
+.auth-switch{display:block;appearance:none;border:0;background:transparent;color:#184c81;font:600 13px/1.5 "Noto Sans Thai",sans-serif;text-decoration:underline;text-underline-offset:4px;padding:9px 8px;margin:6px auto;cursor:pointer}
+.auth-switch:hover{color:#e87714}
+.auth-switch:focus-visible{outline:3px solid #f7941d;outline-offset:2px;border-radius:6px}
+.auth-two-col{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.auth-success{background:#eff8f4;border:1px solid #a8d5c0;border-radius:12px;padding:15px 16px;color:#205345;font-size:13px;line-height:1.7}
+.auth-success h2{margin:0 0 8px;font-size:18px;color:#135b42}
+.auth-success p{margin:8px 0}
+.login-box .auth-links+.sso-approval-note{margin-top:7px}
+.login-box .field{margin-bottom:12px}
+@media(max-width:370px){.auth-two-col{grid-template-columns:1fr}}

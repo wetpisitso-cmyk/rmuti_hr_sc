@@ -184,7 +184,8 @@ window.HRViews = (() => {
       single('workflow', 'file') +
       single('performance', 'performance') +
       single('services', 'globe') +
-      (d.role === 'hr' ? single('admin', 'brief') : '') +
+      (['hr','admin'].includes(d.role) ? single('hr', 'brief') : '') +
+      (d.role === 'admin' ? single('admin', 'shield') : '') +
       '<div class="nav-caption">ช่วยเหลือและข้อมูล</div>' +
       single('help', 'help') +
       single('privacy', 'shield') +
@@ -545,6 +546,33 @@ window.HRViews = (() => {
       panel(tabs[tab] || tabs.queue, body)
     );
   }
+  function adminUsers(d) {
+    const roles = {admin:'ADMIN — ผู้ดูแลระบบ',hr:'HR — เจ้าหน้าที่บุคคล',staff:'USER — บุคลากร'};
+    const people = (d.adminUsers||[]).map(u => {
+      const isSelf = u.id === d.id;
+      const picker = '<select class="role-select" data-role-target="'+e(u.id)+'" aria-label="บทบาทของ '+e(u.display_name||u.email)+'" '+(isSelf?'disabled':'')+'>'+
+        Object.entries(roles).map(([value,label])=>'<option value="'+value+'"'+(u.role===value?' selected':'')+'>'+e(label)+'</option>').join('')+'</select>';
+      return [
+        '<div><b>'+e(u.display_name||'บุคลากร')+'</b><div class="intro">'+e(u.email)+'</div></div>',
+        '<span class="role-pill role-'+e(u.role)+'">'+e(roles[u.role]||u.role)+'</span>',
+        picker,
+        isSelf ? 'บัญชีของท่าน' : btn('บันทึกสิทธิ์','save-role',u.id,'primary','shield')
+      ];
+    });
+    const audit = (d.roleAudit||[]).map(x=>[
+      e(M.date(x.changed_at,true)),
+      e((d.adminUsers||[]).find(u=>u.id===x.actor_id)?.email||'ผู้ดูแลระบบ'),
+      e((d.adminUsers||[]).find(u=>u.id===x.target_id)?.email||'ผู้ใช้งาน'),
+      e(roles[x.old_role]||x.old_role)+' → '+e(roles[x.new_role]||x.new_role)
+    ]);
+    return panel('จัดการบัญชีและกำหนดสิทธิ์',
+      note('การสมัครใหม่ด้วยอีเมลมหาวิทยาลัยจะได้รับสิทธิ์ USER อัตโนมัติ ส่วน HR และ ADMIN ต้องได้รับการแต่งตั้งจาก ADMIN เท่านั้น')+
+      '<p class="intro">ADMIN เข้าถึงงาน HR ได้ด้วย ไม่สามารถเปลี่ยนสิทธิ์บัญชีของตนเอง และระบบป้องกันการลบ ADMIN คนสุดท้าย</p>'+
+      table(['บุคลากร','สิทธิ์ปัจจุบัน','กำหนดสิทธิ์ใหม่','ดำเนินการ'],people,'ยังไม่มีบัญชีบุคลากร')
+    )+panel('ประวัติการเปลี่ยนสิทธิ์',
+      table(['วันเวลา','ผู้เปลี่ยน','บัญชีที่เปลี่ยน','การเปลี่ยนแปลง'],audit,'ยังไม่มีประวัติการเปลี่ยนสิทธิ์')
+    );
+  }
   function signature(d) {
     return (
       '<h2>ลายเซ็นอิเล็กทรอนิกส์</h2><p class="intro">วาดลายเซ็นด้วยเมาส์หรือนิ้ว แล้วกดบันทึก</p><form data-form="signature"><canvas id="signature" width="720" height="200" aria-label="พื้นที่วาดลายเซ็น"></canvas><div class="signature-tools">' +
@@ -659,9 +687,10 @@ window.HRViews = (() => {
       case 'rights':
         body =
           '<h2>สิทธิ์การใช้งานของท่าน</h2><dl><dt>บทบาท</dt><dd>' +
-          (d.role === 'hr' ? 'เจ้าหน้าที่ HR' : 'บุคลากร') +
+          (d.role === 'admin' ? 'ผู้ดูแลระบบ ADMIN' : d.role === 'hr' ? 'เจ้าหน้าที่ HR' : 'บุคลากร USER') +
           '</dd><dt>งานที่เข้าถึงได้</dt><dd>ข้อมูลของตนเอง คำขอหนังสือรับรอง คำสั่ง และกิจกรรม' +
-          (d.role === 'hr' ? ' รวมถึงคิวคำขอและรายงานฝ่ายบุคคล' : '') +
+          (['admin','hr'].includes(d.role) ? ' รวมถึงคิวคำขอและรายงานฝ่ายบุคคล' : '') +
+          (d.role === 'admin' ? ' และการกำหนดบทบาทผู้ใช้' : '') +
           '</dd></dl>';
         break;
       case 'feedback':
@@ -822,13 +851,15 @@ window.HRViews = (() => {
             )
             .join(''),
         );
+      case 'hr':
+        return ['hr','admin'].includes(d.role) ? staff(d, adminTab) : note('ไม่มีสิทธิ์ใช้งาน HR');
       case 'admin':
-        return staff(d, adminTab);
+        return d.role === 'admin' ? adminUsers(d) : note('เฉพาะผู้ดูแลระบบ ADMIN');
     }
     return profileArea(d, id, body);
   }
   function requestDetail(d, r) {
-    const can = d.role === 'hr' && M.transitions[r.status].length;
+    const can = ['hr','admin'].includes(d.role) && M.transitions[r.status].length;
     return (
       '<header class="dialog-title"><div><small>มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น</small><p>ใบรับคำขอหนังสือรับรอง · แผนกงานบริหารงานบุคคล</p>' +
       (HRData.demo ? '<small>ตัวอย่างสำหรับทดลองระบบ</small>' : '') +

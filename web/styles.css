@@ -1325,3 +1325,231 @@ dialog h2,
 .login-box .auth-links+.sso-approval-note{margin-top:7px}
 .login-box .field{margin-bottom:12px}
 @media(max-width:370px){.auth-two-col{grid-template-columns:1fr}}
+
+
+/* RMUTI KKC BRAND THEME 2026 — UI only; no auth or database changes */
+:root{
+  --ink:#122c54;
+  --sub:#506784;
+  --muted:#7990ab;
+  --line:#dce7f5;
+  --soft:#f4f7fd;
+  --paper:#fff;
+  --navy:#0b2552;
+  --blue:#1759bc;
+  --orange:#f48120;
+  --round:18px;
+}
+body{background:var(--soft)}
+a{color:#155bbc}
+:focus-visible{outline-color:#f48120}
+.sidebar{
+  color:#eef4ff;
+  background:linear-gradient(180deg,#0b2450 0%,#123668 49%,#0a2451 100%);
+  border-right:1px solid rgba(255,255,255,.09);
+  box-shadow:5px 0 26px rgba(14,39,89,.1);
+  scrollbar-color:#5273a0 transparent;
+}
+.sidebar .brand{
+  background:linear-gradient(135deg,#092047,#123b78);
+  color:#fff;
+  border-bottom:1px solid rgba(255,255,255,.13);
+  min-height:90px;
+}
+.sidebar .brandmark{
+  background:linear-gradient(145deg,#fff9ef,#f0f6ff);
+  color:#0d3a78;
+  box-shadow:0 5px 16px rgba(0,0,0,.14);
+}
+.sidebar .brand strong{color:#fff;font-weight:800}
+.sidebar .brand em{color:#ff9b39;font-weight:780}
+.sidebar .brand small{color:#c0d0e9}
+.sidebar .nav-link,.sidebar .nav-group>summary{
+  color:#dbe8fb;
+  min-height:44px;
+  border:1px solid transparent;
+  border-radius:11px;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+.sidebar .nav-link svg,.sidebar .nav-group summary>svg{color:#f5ab46}
+.sidebar .nav-link:hover,.sidebar .nav-group>summary:hover{
+  color:#fff;background:rgba(255,255,255,.1);
+}
+.sidebar .nav-link[aria-current],
+.sidebar .nav-group.current>summary{
+  background:linear-gradient(110deg,#2468cf,#2356aa);
+  color:#fff;
+  border-color:rgba(255,255,255,.13);
+  box-shadow:0 4px 12px rgba(2,17,44,.13);
+  font-weight:740;
+}
+.sidebar .nav-link[aria-current] svg,
+.sidebar .nav-group.current>summary svg{color:#fff}
+.sidebar .nav-group>div{border-left-color:rgba(153,191,241,.34)}
+.sidebar .nav-group>div a{color:#c8d9f1}
+.sidebar .nav-group>div a:hover{background:rgba(255,255,255,.1);color:#fff}
+.sidebar .nav-group>div a[aria-current]{
+  color:#fff;background:rgba(61,128,223,.28);font-weight:720
+}
+.sidebar .nav-group>div a[aria-current]:before{background:#ffad4b}
+.sidebar .nav-caption{
+  color:#97b3d9;border-top-color:rgba(255,255,255,.16);
+  letter-spacing:.025em;
+}
+.bar{
+  background:rgba(255,255,255,.97);
+  border-bottom:1px solid #e1eaf7;
+  box-shadow:0 3px 15px rgba(15,57,119,.045);
+}
+.bar-title b,.who b{color:#153b70}
+.bar-title small,.who small{color:#647d9d}
+.user-chip{
+  color:#164b96;
+  background:linear-gradient(145deg,#eff6ff,#d9e9ff);
+  border:2px solid #fff;
+  box-shadow:0 2px 9px rgba(28,77,151,.12);
+}
+main#content{max-width:1550px}
+.crumb a:hover{color:var(--blue)}
+.heading h1{color:#0e2d5a;font-weight:800;letter-spacing:-.035em}
+h2,h3{color:#153565}
+.profile-banner{
+  background:linear-gradient(112deg,#074199 0%,#145fd0 47%,#4894eb 100%);
+  box-shadow:0 13px 30px rgba(21,78,174,.17);
+  border:1px solid rgba(255,255,255,.26);
+  min-height:182px;
+}
+.profile-banner::before{
+  content:"";
+  position:absolute;inset:auto -10% -102px -15%;
+  height:145px;
+  background:linear-gradient(9deg,rgba(255,255,255,.04),rgba(255,255,255,.17));
+  border-radius:50%;
+  transform:rotate(-5deg);
+  pointer-events:none;
+}
+.profile-banner::after{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
+  background:linear-gradient(#ffad48,#ff751d);
+}
+.profile-banner .banner-copy{padding:24px 34px}
+.profile-banner .banner-label{color:#eef5ff;font-weight:620}
+.profile-banner .banner-label svg{color:#ffba60}
+.profile-banner .banner-copy h2{font-weight:790;text-shadow:0 1px 2px rgba(11,36,85,.12)}
+.profile-banner .banner-copy p{color:#eaf4ff}
+.banner-meta span{
+  background:rgba(255,255,255,.15);
+  border-color:rgba(255,255,255,.37);
+}
+.banner-art{background:radial-gradient(ellipse at 75% 80%,#2f89eb,transparent 70%)}
+.banner-art i:nth-child(2){
+  background:
+    repeating-radial-gradient(ellipse 70% 85% at 50% 63%,transparent 0 3px,#ffffff3d 3.6px 4px),
+    linear-gradient(115deg,#ffce85 9%,#ff9329 55%,#e56c15);
+}
+.panel,.profile-main{
+  border-color:#e1eaf6;
+  box-shadow:0 7px 22px rgba(17,60,120,.07);
+  background:#fff;
+}
+.panel-title h2{color:#132f60;font-weight:780}
+.panel-title{border-bottom:1px solid #ebf0f8;padding-bottom:10px}
+.profile-tabs a{color:#405d85}
+.profile-tabs a:hover{background:#e9f1fe}
+.profile-tabs a[aria-current]{
+  color:#fff;background:linear-gradient(115deg,#1452b0,#287ad5);
+  box-shadow:0 4px 10px rgba(29,87,180,.19);
+}
+.field>span{color:#28466d}
+input,select,textarea{
+  border-color:#c9d8ea;
+  box-shadow:inset 0 1px 2px rgba(20,60,111,.015);
+}
+input:focus,select:focus,textarea:focus{
+  border-color:#2475d6;
+  outline:2px solid rgba(36,117,214,.17);
+  outline-offset:0;
+}
+.btn.primary,.btn.selected{
+  background:linear-gradient(120deg,#0b48ad,#236ad0);
+  color:#fff;box-shadow:0 5px 13px rgba(29,86,184,.15);
+}
+.btn.primary:hover,.btn.selected:hover{background:linear-gradient(120deg,#0c397f,#1658b9)}
+.btn.light,.btn.demo-btn{border-color:#d6e2f3;color:#23476d;background:#fff}
+.btn.light:hover,.btn.demo-btn:hover{background:#eff5ff}
+.iconbtn{background:#eaf2fc;color:#1750a1}
+.iconbtn:hover{background:#dbeafd}
+.stats{gap:14px}
+.stats a{
+  min-height:110px;background:#fff;border:1px solid #e0e9f5;
+  box-shadow:0 6px 18px rgba(19,59,117,.07);
+  border-radius:16px;
+}
+.stats a:hover{border-color:#a9c6ed;transform:translateY(-2px);transition:transform .18s ease}
+.stats strong{color:#0b3579;font-weight:820}
+.stats small{color:#526b89;font-weight:620}
+.stat-icon{background:#e6f2ff;color:#1665ca;border-radius:50%;padding:11px}
+.stats a:nth-child(2) .stat-icon{background:#fff1df;color:#eb840c}
+.stats a:nth-child(3) .stat-icon{background:#e2f6e8;color:#199052}
+.shortcut{background:#f1f6fe;color:#194985;border:1px solid #e3ebf7}
+.shortcut:hover{background:#e4efff;border-color:#b9d2f3}
+.event-symbol{background:#e9f3ff;color:#1c63b3}
+th{background:#eef4fc;color:#244d7e}
+tbody tr:hover{background:#f8fbff}
+.ref{font-weight:740;color:#1254b3}
+.note{background:#edf5ff;color:#31567e}
+.note.warm{background:#fff3e5;color:#9e5819}
+.verified{background:#e5f8ed;color:#176c41}
+.process{background:#f3f8ff}
+.login{
+  position:relative;isolation:isolate;
+  background:
+    radial-gradient(ellipse 40% 42% at 0% 98%,rgba(12,79,180,.18),transparent),
+    radial-gradient(ellipse 35% 45% at 100% 1%,rgba(254,143,41,.18),transparent),
+    linear-gradient(152deg,#f7faff,#edf5ff 48%,#f7f9ff 100%);
+}
+.login::before,.login::after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;opacity:.48
+}
+.login::before{
+  width:320px;height:320px;left:-155px;bottom:-135px;border-radius:38%;
+  border:62px solid #2c71d0;transform:rotate(35deg)
+}
+.login::after{
+  width:280px;height:280px;right:-170px;top:-135px;border-radius:44%;
+  border:58px solid #f5862b;transform:rotate(-30deg)
+}
+.login-box{
+  border:1px solid #c8d9f1;
+  border-top:4px solid #2370cf;
+  border-radius:24px;
+  box-shadow:0 18px 50px rgba(12,54,124,.15);
+  padding:34px;
+}
+.auth-heading .brandmark{
+  background:linear-gradient(135deg,#0b3479,#236bd1);
+  box-shadow:0 8px 20px rgba(20,73,158,.19);
+}
+.login h1{color:#0f2e68;text-align:center;font-weight:800}
+.auth-subtitle{color:#0d3876}
+.auth-switch{color:#1158b1}
+.auth-switch:hover{color:#de671a}
+.login .btn.primary{min-height:45px;width:100%;font-size:14px}
+.sso-approval-note{color:#5d7597}
+.auth-success{background:#e8f8ee;border-color:#acddbe}
+dialog{border-color:#cbdcf0}
+.workflow-steps span{background:#eaf4ff;color:#174a98;border-color:#c9ddf6}
+@media(max-width:960px){.sidebar{box-shadow:6px 0 22px rgba(6,31,77,.2)}}
+@media(max-width:680px){
+  .login-box{padding:24px 19px}
+  .login::before{width:170px;height:170px;left:-100px;bottom:-85px;border-width:30px}
+  .login::after{width:180px;height:180px;right:-110px;top:-85px;border-width:36px}
+  .profile-banner .banner-copy{padding:19px}
+  .stats a{min-height:95px}
+  .stat-icon{padding:5px}
+}
+@media(prefers-reduced-motion:reduce){.stats a:hover{transform:none;transition:none}}
+@media print{
+  .profile-banner,.sidebar,.bar,.login{box-shadow:none}
+  .stats a{box-shadow:none}
+}

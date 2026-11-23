@@ -130,6 +130,12 @@ Deno.serve(async (req) => {
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: { user }, error: authError } = await admin.auth.getUser(match[1]);
   if (authError || !user) return json({ error: "สิทธิ์เข้าสู่ระบบไม่ถูกต้อง" }, 401, origin);
+  // Domain and email confirmation are server-side conditions, not a browser-only check.
+  if (!user.email_confirmed_at ||
+      !/^[^\\s@]+@rmuti\\.ac\\.th$/i.test((user.email ?? "").trim()) ||
+      user.is_anonymous === true) {
+    return json({ error: "กรุณายืนยันอีเมลมหาวิทยาลัยก่อนใช้เอกสาร" }, 403, origin);
+  }
   const { data: member, error: memberError } = await admin.from("hr_members")
     .select("role").eq("id", user.id).maybeSingle();
   if (memberError || !member) return json({ error: "บัญชีนี้ยังไม่ได้รับสิทธิ์ใช้งาน" }, 403, origin);

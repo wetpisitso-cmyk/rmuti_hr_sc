@@ -113,6 +113,7 @@ window.HRData = (() => {
         activities: s.activities,
         registrations: s.registrations.filter((r) => r.owner_id === id || any),
         assessments: s.assessments.filter((r) => r.owner_id === id || any),
+        workflows: [], workflowEvents: [], officers: [],
       };
     }
     const session = ok(await db().auth.getSession()).session;
@@ -136,6 +137,9 @@ window.HRData = (() => {
       activities,
       registrations,
       assessments,
+      workflows,
+      workflowEvents,
+      officers,
     ] = await Promise.all([
       rows('profiles'),
       rows('orgs'),
@@ -152,6 +156,9 @@ window.HRData = (() => {
       rows('activities'),
       rows('registrations'),
       rows('assessments'),
+      rows('document_flows'),
+      rows('document_events'),
+      db().rpc('hr_workflow_officers').then(ok),
     ]);
     const profile = profiles.find((p) => p.id === id);
     if (!profile)
@@ -172,6 +179,7 @@ window.HRData = (() => {
       activities,
       registrations,
       assessments,
+      workflows, workflowEvents, officers,
     };
   }
   async function login(email, password) {
@@ -399,6 +407,25 @@ window.HRData = (() => {
       }
     }
   }
+  async function proposeDocument(p) {
+    if (demo) throw Error('ระบบเสนอเอกสารต้องใช้บัญชี Supabase จริง');
+    return ok(await db().rpc('hr_propose_document', {
+      p_title:p.title,p_content:p.content,p_reviewer:p.reviewer_id,
+      p_approver:p.approver_id,p_signer:p.signer_id
+    }));
+  }
+  async function advanceDocument(p) {
+    if (demo) throw Error('ระบบเสนอเอกสารต้องใช้บัญชี Supabase จริง');
+    return ok(await db().rpc('hr_advance_document', {
+      p_id:p.id,p_action:p.action,p_note:p.note||'',p_expected_revision:p.revision
+    }));
+  }
+  async function reviseDocument(p) {
+    if (demo) throw Error('ระบบเสนอเอกสารต้องใช้บัญชี Supabase จริง');
+    return ok(await db().rpc('hr_resubmit_document', {
+      p_id:p.id,p_content:p.content,p_note:p.note||'',p_expected_revision:p.revision
+    }));
+  }
   async function download(r) {
     if (demo) return (await fetch(r.document_path)).blob();
     if (!r.document_path?.startsWith('drive:'))
@@ -423,5 +450,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, logout, download, message };
+  return { demo, load, save, login, logout, download, message, proposeDocument, advanceDocument, reviseDocument };
 })();

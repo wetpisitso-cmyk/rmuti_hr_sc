@@ -1,0 +1,3 @@
+-- Google Drive is the document store for rmuti_hr_sc.
+-- DO NOT create the hr-certificates Supabase Storage bucket.
+-- File references are stored as drive:<Google file ID> in public.hr_requests.document_path.

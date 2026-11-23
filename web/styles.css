@@ -1553,3 +1553,12 @@ dialog{border-color:#cbdcf0}
   .profile-banner,.sidebar,.bar,.login{box-shadow:none}
   .stats a{box-shadow:none}
 }
+
+
+/* Role management for ADMIN */
+.role-select{min-width:185px;font-size:12px;font-weight:630;border-color:#b9cfe9;background:#f8fbff}
+.role-pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:99px;padding:6px 11px;font-size:12px;font-weight:730}
+.role-pill.role-admin{background:#e8efff;color:#124ba9}
+.role-pill.role-hr{background:#fff0e0;color:#a9560e}
+.role-pill.role-staff{background:#e8f7ee;color:#176b45}
+@media(max-width:680px){.role-select{min-width:140px}}

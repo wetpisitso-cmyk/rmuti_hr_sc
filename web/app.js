@@ -49,7 +49,8 @@
     }
     const route = location.hash.slice(1);
     page = Object.hasOwn(M.pages, route) ? route : 'profile';
-    if (page === 'admin' && data.role !== 'hr') page = 'home';
+    if (page === 'admin' && data.role !== 'admin') page = 'home';
+    if (page === 'hr' && !['hr','admin'].includes(data.role)) page = 'home';
     app.innerHTML = V.layout(data, page, V.page(data, page, adminTab));
     document.title = M.pages[page] + ' | บุคลากร มทร.อีสาน ขอนแก่น';
     if (page === 'signature') setupSignature();
@@ -480,9 +481,28 @@
         return;
       }
       case 'admin-tab':
+        if (!['hr','admin'].includes(data?.role)) throw Error('เฉพาะเจ้าหน้าที่ HR');
         adminTab = id;
         render();
         return;
+      case 'save-role': {
+        if (data?.role !== 'admin') throw Error('เฉพาะผู้ดูแลระบบ ADMIN');
+        if (id === data.id) throw Error('ไม่สามารถเปลี่ยนบทบาทบัญชีของตนเอง');
+        const field = [...document.querySelectorAll('[data-role-target]')]
+          .find(el=>el.dataset.roleTarget===id);
+        if (!field) throw Error('ไม่พบบัญชีผู้ใช้');
+        const user = (data.adminUsers||[]).find(x=>x.id===id);
+        if (!user || !['staff','hr','admin'].includes(field.value))
+          throw Error('บทบาทไม่ถูกต้อง');
+        if (user.role===field.value) { toast('ยังไม่มีการเปลี่ยนสิทธิ์');return; }
+        const labels={staff:'USER',hr:'HR',admin:'ADMIN'};
+        if (!window.confirm('ยืนยันเปลี่ยนสิทธิ์ '+user.email+' จาก '+labels[user.role]+' เป็น '+labels[field.value]+'?'))
+          return;
+        await D.setUserRole(id,field.value);
+        await refresh();
+        toast('เปลี่ยนสิทธิ์เรียบร้อย พร้อมบันทึกประวัติแล้ว');
+        return;
+      }
       case 'clear-sign':
         strokes = [];
         signed = false;

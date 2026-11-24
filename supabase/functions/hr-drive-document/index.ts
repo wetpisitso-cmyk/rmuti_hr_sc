@@ -77,7 +77,7 @@ async function googleAccessToken() {
 }
 async function removeOrphan(id: string, token: string) {
   try {
-    await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(id), {
+    await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(id) + "?supportsAllDrives=true", {
       method: "DELETE", headers: { Authorization: `Bearer ${token}` },
     });
   } catch { /* Cleanup is best effort, review Drive for orphans. */ }
@@ -85,7 +85,7 @@ async function removeOrphan(id: string, token: string) {
 async function uploadPdf(file: File, requestId: string, token: string) {
   const folder = Deno.env.get("HR_DRIVE_FOLDER_ID");
   if (!folder) throw Error("HR_DRIVE_FOLDER_ID not configured");
-  const init = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType", {
+  const init = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true&fields=id,name,mimeType", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -154,9 +154,21 @@ Deno.serve(async (req) => {
       action = String(data.action ?? "");
       requestId = String(data.request_id ?? "");
     }
+    if (action === "health") {
+      if (member.role !== "admin") return json({ error: "เฉพาะ ADMIN" }, 403, origin);
+      const folder = Deno.env.get("HR_DRIVE_FOLDER_ID");
+      if (!folder || !Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL") || !Deno.env.get("GOOGLE_PRIVATE_KEY"))
+        return json({ error: "ยังไม่ได้ตั้งค่าข้อมูลรับรอง Google Drive ในระบบ" }, 503, origin);
+      const token = await googleAccessToken();
+      const check = await fetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(folder)+"?supportsAllDrives=true&fields=id,mimeType,trashed,capabilities(canAddChildren)", { headers: { Authorization: `Bearer ${token}` } });
+      if (!check.ok) return json({error:"ไม่สามารถเข้าถึงโฟลเดอร์เอกสาร กรุณาตรวจสิทธิ์ Service Account"},503,origin);
+      const info = await check.json();
+      if (info.trashed || info.mimeType !== "application/vnd.google-apps.folder") return json({error:"ปลายทางไม่ใช่โฟลเดอร์ที่พร้อมใช้งาน"},503,origin);
+      return json({connected:true,writable:info.capabilities?.canAddChildren===true},200,origin);
+    }
     if (!/^[0-9a-f-]{36}$/i.test(requestId)) return json({ error: "รหัสคำขอไม่ถูกต้อง" }, 400, origin);
     const { data: record, error: readError } = await admin.from("hr_requests")
-      .select("id,owner_id,status,document_path").eq("id", requestId).maybeSingle();
+      .select("id,owner_id,status,kind,document_path").eq("id", requestId).maybeSingle();
     if (readError || !record) return json({ error: "ไม่พบคำขอ" }, 404, origin);
     if (action === "upload") {
       if (!["hr","admin"].includes(member.role)) return json({ error: "เฉพาะเจ้าหน้าที่ HR" }, 403, origin);
@@ -167,6 +179,10 @@ Deno.serve(async (req) => {
       if (!file || file.size <= 0 || file.size > maxBytes ||
         (await file.slice(0, 5).text()) !== "%PDF-")
         return json({ error: "กรุณาเลือก PDF ขนาดไม่เกิน 5 MB" }, 400, origin);
+      if (record.kind === "salary") {
+        const flow = await admin.from("hr_document_flows").select("id").eq("certificate_request_id",requestId).eq("status","signed").not("signed_at","is",null).not("signed_content_hash","is",null).limit(1).maybeSingle();
+        if (flow.error || !flow.data) return json({error:"ต้องผ่านการตรวจสอบ อนุมัติ และลงนามก่อนออกหนังสือ"},409,origin);
+      }
       const token = await googleAccessToken();
       const id = await uploadPdf(file, requestId, token);
       const changed = await admin.from("hr_requests")
@@ -186,7 +202,7 @@ Deno.serve(async (req) => {
         return json({ error: "เอกสารยังไม่พร้อมรับ" }, 409, origin);
       const token = await googleAccessToken();
       const id = record.document_path.slice(6);
-      const dl = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(id) + "?alt=media", {
+      const dl = await fetch("https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(id) + "?alt=media&supportsAllDrives=true", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!dl.ok) throw Error("Drive download failed");

@@ -140,8 +140,9 @@ window.HRData = (() => {
       ? await Promise.all([
           db().rpc('hr_admin_list_users').then(ok),
           db().from('hr_role_audit').select('id,actor_id,target_id,old_role,new_role,changed_at').order('changed_at',{ascending:false}).limit(50).then(ok),
+          db().rpc('hr_admin_list_pending_email_roles').then(ok),
         ])
-      : [[],[]];
+      : [[],[],[]];
     const [
       profiles,
       orgs,
@@ -186,6 +187,7 @@ window.HRData = (() => {
       role: membership.role,
       adminUsers: adminInfo[0],
       roleAudit: adminInfo[1],
+      pendingEmailRoles: adminInfo[2],
       profile,
       profiles,
       orgs,
@@ -470,6 +472,18 @@ window.HRData = (() => {
       }
     }
   }
+  async function assignEmailRole(email, role) {
+    if (demo) throw Error('การกำหนดสิทธิ์ใช้งานได้เฉพาะระบบจริง');
+    const normalized = String(email||'').trim().toLowerCase();
+    if (!/^[^\s@]+@rmuti\.ac\.th$/.test(normalized))
+      throw Error('กรุณาใช้อีเมลมหาวิทยาลัย @rmuti.ac.th');
+    if (!['staff','hr','admin'].includes(role)) throw Error('สิทธิ์ไม่ถูกต้อง');
+    return ok(await db().rpc('hr_admin_assign_email',{p_email:normalized,p_role:role}));
+  }
+  async function cancelPendingEmailRole(email) {
+    if (demo) throw Error('การจัดการสิทธิ์ใช้งานได้เฉพาะระบบจริง');
+    return ok(await db().rpc('hr_admin_cancel_pending_email',{p_email:email}));
+  }
   async function setUserRole(userId, role) {
     if (demo) throw Error('การกำหนดสิทธิ์ทำได้ในระบบจริงเท่านั้น');
     if (!['admin','hr','staff'].includes(role)) throw Error('บทบาทไม่ถูกต้อง');
@@ -520,5 +534,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole };
 })();

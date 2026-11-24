@@ -162,6 +162,20 @@
       await refresh();
       return;
     }
+    if (kind === 'assign-email-role') {
+      if (data?.role!=='admin') throw Error('เฉพาะผู้ดูแลระบบ ADMIN');
+      const email = String(vals.email||'').trim().toLowerCase();
+      const role = vals.role;
+      if (!/^[^\s@]+@rmuti\.ac\.th$/.test(email)) throw Error('กรุณากรอกอีเมล @rmuti.ac.th');
+      if (!['staff','hr','admin'].includes(role)) throw Error('สิทธิ์ไม่ถูกต้อง');
+      const user = (data.adminUsers||[]).find(x=>x.email?.toLowerCase()===email);
+      if (user?.id===data.id) throw Error('ไม่สามารถเปลี่ยนสิทธิ์ของตนเอง');
+      if (!window.confirm('ยืนยันกำหนดสิทธิ์ '+email+' เป็น '+({staff:'USER',hr:'HR',admin:'ADMIN'}[role])+'?')) return;
+      const status = await D.assignEmailRole(email,role);
+      await refresh();
+      toast(status==='pending'?'บันทึกสิทธิ์รอการสมัครและยืนยันอีเมลแล้ว (30 วัน)':'กำหนดสิทธิ์บัญชีเรียบร้อยแล้ว');
+      return;
+    }
     if (kind === 'signup') {
       if (vals.password !== vals.confirm_password)
         throw Error('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
@@ -485,6 +499,17 @@
         adminTab = id;
         render();
         return;
+      case 'cancel-email-role': {
+        if (data?.role!=='admin') throw Error('เฉพาะผู้ดูแลระบบ ADMIN');
+        const email = String(id||'').toLowerCase();
+        if (!(data.pendingEmailRoles||[]).some(p=>p.email===email))
+          throw Error('ไม่พบรายการรออนุญาต');
+        if (!window.confirm('ยืนยันยกเลิกรายการรอสิทธิ์ '+email+'?')) return;
+        await D.cancelPendingEmailRole(email);
+        await refresh();
+        toast('ยกเลิกรายการรอสิทธิ์แล้ว');
+        return;
+      }
       case 'save-role': {
         if (data?.role !== 'admin') throw Error('เฉพาะผู้ดูแลระบบ ADMIN');
         if (id === data.id) throw Error('ไม่สามารถเปลี่ยนบทบาทบัญชีของตนเอง');

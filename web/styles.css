@@ -1562,3 +1562,24 @@ dialog{border-color:#cbdcf0}
 .role-pill.role-hr{background:#fff0e0;color:#a9560e}
 .role-pill.role-staff{background:#e8f7ee;color:#176b45}
 @media(max-width:680px){.role-select{min-width:140px}}
+
+
+/* ADMIN: assign permissions directly by university email */
+.assign-email-role-form{
+  display:grid;grid-template-columns:minmax(230px,2fr) minmax(190px,1.25fr) auto;
+  gap:12px;align-items:end;margin:5px 0 18px;
+}
+.assign-email-role-form .field{margin:0;min-width:0}
+.assign-email-role-form .btn{
+  min-height:44px;padding:10px 18px;white-space:nowrap;font-weight:750;
+}
+.assign-email-role-form input,.assign-email-role-form select{background:#fafdff}
+@media(max-width:850px){
+ .assign-email-role-form{grid-template-columns:1fr 1fr}
+ .assign-email-role-form .field:first-child{grid-column:1/-1}
+ .assign-email-role-form .btn{width:100%}
+}
+@media(max-width:550px){
+ .assign-email-role-form{grid-template-columns:1fr}
+ .assign-email-role-form .field:first-child{grid-column:auto}
+}

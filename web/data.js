@@ -143,6 +143,9 @@ window.HRData = (() => {
           db().rpc('hr_admin_list_pending_email_roles').then(ok),
         ])
       : [[],[],[]];
+    const duties=ok(await db().from('hr_member_duties').select('duty').eq('member_id',id)).map(x=>x.duty);
+    const allDuties=membership.role==='admin'?await rows('member_duties'):[];
+    const dutyAudit=membership.role==='admin'?ok(await db().from('hr_duty_audit').select('*').order('changed_at',{ascending:false}).limit(50)):[];
     const salaryInfo=['hr','admin'].includes(membership.role)?await Promise.all([rows('salary_drafts'),db().rpc('hr_salary_workflow_status').then(ok)]):[[],[]];
     const [
       profiles,
@@ -177,7 +180,7 @@ window.HRData = (() => {
       rows('assessments'),
       rows('document_flows'),
       rows('document_events'),
-      db().rpc('hr_workflow_officers').then(ok),
+      db().rpc('hr_workflow_eligible_officers').then(ok),
       rows('training_records'),
       rows('education_records'),
       rows('position_records'),
@@ -190,6 +193,7 @@ window.HRData = (() => {
     return {
       id,
       role: membership.role,
+      duties,allDuties,dutyAudit,
       salaryDrafts:salaryInfo[0],salaryFlows:salaryInfo[1],
       adminUsers: adminInfo[0],
       roleAudit: adminInfo[1],
@@ -542,6 +546,10 @@ window.HRData = (() => {
       p_user_id:userId, p_role:role,
     }));
   }
+  async function setDuties(email,duties){
+    if(demo)throw Error('ใช้ระบบจริง');
+    return ok(await db().rpc('hr_admin_set_duties',{p_email:String(email).trim().toLowerCase(),p_duties:duties}));
+  }
   async function executiveSummary(){
     if(demo)throw Error('ใช้บัญชี ADMIN จริง');
     return ok(await db().rpc('hr_executive_summary'));
@@ -602,5 +610,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, saveSalaryDraft, submitSalaryDraft, executiveSummary, driveCheck };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, saveSalaryDraft, submitSalaryDraft, executiveSummary, driveCheck, setDuties };
 })();

@@ -190,7 +190,7 @@ window.HRViews = (() => {
       single('performance', 'performance') +
       single('services', 'globe') +
       (['hr','admin'].includes(d.role) ? single('hr', 'brief') : '') +
-      (d.role === 'admin' ? single('executive', 'performance') + single('admin', 'shield') : '') +
+      ((d.role === 'admin'||(d.duties||[]).includes('executive')) ? single('executive', 'performance') : '') + (d.role === 'admin' ? single('admin','shield') : '') +
       '<div class="nav-caption">ช่วยเหลือและข้อมูล</div>' +
       single('help', 'help') +
       single('privacy', 'shield') +
@@ -705,7 +705,18 @@ window.HRViews = (() => {
       e(M.date(p.expires_at,true)),
       btn('ยกเลิกรายการ','cancel-email-role',p.email,'light','close')
     ]);
-    return panel('เพิ่มหรือกำหนดสิทธิ์ด้วยอีเมล',
+    const dutyLabels={reviewer:'REVIEWER — ผู้ตรวจสอบ',approver:'APPROVER — ผู้อนุมัติ',signer:'SIGNER — ผู้ลงนาม',executive:'EXECUTIVE — ผู้บริหาร'};
+    const dutyRows=(d.adminUsers||[]).map(u=>{
+      const ds=(d.allDuties||[]).filter(x=>x.member_id===u.id).map(x=>x.duty);
+      return [e(u.display_name||u.email)+'<div class="intro">'+e(u.email)+'</div>',e(roles[u.role]),e(ds.map(x=>dutyLabels[x]).join(' / ')||'ไม่มีสิทธิ์เสริม'),u.id===d.id?'บัญชีของท่าน':btn('กำหนดหน้าที่','edit-duties',u.id,'primary','shield')];
+    });
+    const dutyHistory=(d.dutyAudit||[]).map(a=>[e(M.date(a.changed_at,true)),e((d.adminUsers||[]).find(u=>u.id===a.target_id)?.email||'บัญชีผู้ใช้'),e(a.old_duties.join(', ')||'—'),e(a.new_duties.join(', ')||'—')]);
+    return panel('กำหนดสิทธิ์เฉพาะหน้าที่',
+      note('เลือกหลายหน้าที่ต่อบัญชีได้ โดยไม่ต้องให้สิทธิ์ HR ผู้รับสิทธิ์ต้องสมัครและยืนยันอีเมลก่อน')+
+      '<form data-form="duties-find" class="assign-email-role-form">'+field('อีเมลมหาวิทยาลัย',input('email','type="email" required placeholder="name@rmuti.ac.th"'))+'<button type="submit" class="btn primary">ค้นหาและกำหนดหน้าที่</button></form>'+
+      tableSearch('duty-accounts','ค้นหาชื่อหรืออีเมล')+'<div id="duty-accounts">'+table(['บัญชี','สิทธิ์พื้นฐาน','หน้าที่เพิ่มเติม','ดำเนินการ'],dutyRows,'ยังไม่มีบัญชี')+'</div>'
+    )+panel('ประวัติการเปลี่ยนหน้าที่',table(['วันที่','บัญชี','หน้าที่เดิม','หน้าที่ใหม่'],dutyHistory,'ยังไม่มีรายการ'))+
+    panel('เพิ่มหรือกำหนดสิทธิ์ด้วยอีเมล',
       '<p class="intro">กรอกอีเมลมหาวิทยาลัย เลือกบทบาท แล้วกดบันทึกสิทธิ์</p>'+
       '<form data-form="assign-email-role" class="assign-email-role-form">'+
       field('อีเมลมหาวิทยาลัย',input('email','type="email" maxlength="254" autocomplete="off" inputmode="email" placeholder="name@rmuti.ac.th" required'))+
@@ -801,7 +812,7 @@ window.HRViews = (() => {
       case 'training': return trainingPage(d);
       case 'education': return historyPage(d,'education');
       case 'positions': return historyPage(d,'positions');
-      case 'executive': return d.role==='admin'?panel('ภาพรวมสำหรับผู้บริหาร','<div id="executive-summary" role="status">กำลังโหลดข้อมูลสรุป...</div>') : note('เฉพาะผู้ที่ได้รับอนุญาต');
+      case 'executive': return (d.role==='admin'||(d.duties||[]).includes('executive'))?panel('ภาพรวมสำหรับผู้บริหาร','<div id="executive-summary" role="status">กำลังโหลดข้อมูลสรุป...</div>') : note('เฉพาะผู้ที่ได้รับอนุญาต');
       case 'directory': return directoryPage(d);
       case 'home':
         return (
@@ -854,7 +865,7 @@ window.HRViews = (() => {
       case 'rights':
         body =
           '<h2>สิทธิ์การใช้งานของท่าน</h2><dl><dt>บทบาท</dt><dd>' +
-          (d.role === 'admin' ? 'ผู้ดูแลระบบ ADMIN' : d.role === 'hr' ? 'เจ้าหน้าที่ HR' : 'บุคลากร USER') +
+          (d.role === 'admin' ? 'ผู้ดูแลระบบ ADMIN' : d.role === 'hr' ? 'เจ้าหน้าที่ HR' : 'บุคลากร USER') + ((d.duties||[]).length?' · '+e(d.duties.map(x=>x.toUpperCase()).join(' / ')):'') +
           '</dd><dt>งานที่เข้าถึงได้</dt><dd>ข้อมูลของตนเอง คำขอหนังสือรับรอง คำสั่ง และกิจกรรม' +
           (['admin','hr'].includes(d.role) ? ' รวมถึงคิวคำขอและรายงานฝ่ายบุคคล' : '') +
           (d.role === 'admin' ? ' และการกำหนดบทบาทผู้ใช้' : '') +
@@ -1062,7 +1073,7 @@ window.HRViews = (() => {
     const p=d.profiles.find(v=>v.id===r.owner_id),org=d.orgs.find(v=>v.id===p?.org_id);
     const val=(k,fallback='')=>e(x[k]??fallback);
     const officers=(d.officers||[]).filter(o=>o.id!==d.id);
-    const choices=(name,title,required=false)=>field(title,'<select name="'+name+'" '+(required?'required':'')+'><option value="">ยังไม่กำหนด</option>'+officers.map(o=>'<option value="'+e(o.id)+'" '+(x[name]===o.id?'selected':'')+'>'+e(o.display_name)+'</option>').join('')+'</select>');
+    const choices=(name,title,required=false)=>field(title,'<select name="'+name+'" '+(required?'required':'')+'><option value="">ยังไม่กำหนด</option>'+officers.filter(o=>(o.duties||[]).includes(name.replace('_id',''))).map(o=>'<option value="'+e(o.id)+'" '+(x[name]===o.id?'selected':'')+'>'+e(o.display_name)+'</option>').join('')+'</select>');
     return '<header class="salary-editor-head"><div><small>จัดทำหนังสือรับรองเงินเดือน</small><h2>'+e(num(r))+' — '+e(personOf(d,r.owner_id))+'</h2></div>'+badge(r.status)+'</header>'+
       note('ตรวจสอบข้อมูลกับทะเบียนและเงินเดือนจริงก่อนบันทึก ข้อมูลจากโปรไฟล์เป็นข้อมูลที่บุคลากรกรอกเอง')+
       '<form data-form="salary-draft" data-id="'+e(r.id)+'"><div class="module-grid">'+

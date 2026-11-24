@@ -56,7 +56,8 @@
     }
     const route = location.hash.slice(1);
     page = Object.hasOwn(M.pages, route) ? route : 'profile';
-    if (['admin','executive'].includes(page) && data.role !== 'admin') page = 'home';
+    if (page==='admin'&&data.role!=='admin') page='home';
+    if(page==='executive'&&data.role!=='admin'&&!(data.duties||[]).includes('executive'))page='home';
     if (['hr','directory'].includes(page) && !['hr','admin'].includes(data.role)) page = 'home';
     app.innerHTML = V.layout(data, page, V.page(data, page, adminTab));
     document.title = M.pages[page] + ' | HR KKC';
@@ -65,7 +66,7 @@
   }
   async function renderExecutive(){
     const el=document.getElementById('executive-summary');
-    if(!el||data?.role!=='admin')return;
+    if(!el||!data||(data.role!=='admin'&&!(data.duties||[]).includes('executive')))return;
     try{
       const x=await D.executiveSummary();
       if(!el.isConnected)return;
@@ -80,7 +81,7 @@
       '<div class="executive-kpis">'+k('บัญชีบุคลากร',x.accounts)+k('คำขอค้างดำเนินการ',x.open_requests)+k('เอกสารรอพิจารณา',x.pending_documents)+k('หนังสือพร้อมรับ / รับแล้ว',x.issued_requests)+k('ชั่วโมงพัฒนาที่ตรวจสอบแล้ว',x.training_hours)+k('เอกสารลงนามภายใน',x.signed_documents)+'</div>'+
       '<div class="executive-charts">'+chart('แยกตามคณะ / หน่วยงาน',x.faculties)+chart('ประเภทบุคลากร',x.staff_types)+chart('สายงาน',x.tracks)+chart('วุฒิสูงสุดที่ HR ตรวจสอบแล้ว',x.education)+chart('สถานะคำขอ',x.requests)+'</div>'+
       '<h3>ข้อมูลและงานที่ต้องติดตาม</h3><div class="executive-kpis">'+k('ยังไม่ระบุสังกัด',x.missing_org)+k('ยังไม่ระบุตำแหน่ง',x.missing_position)+k('ประวัติอบรมรอตรวจ',x.training_pending)+k('วุฒิรอตรวจ',x.education_pending)+k('ตำแหน่งรอตรวจ',x.positions_pending)+'</div>'+
-      '<p class="intro">รายงานสรุปเท่านั้น ไม่แสดงชื่อบุคลากร เงินเดือน หรือรายละเอียดเอกสาร</p><button type="button" class="btn light" data-action="drive-health">ตรวจสอบการเชื่อมต่อพื้นที่เอกสาร</button>';
+      '<p class="intro">รายงานสรุปเท่านั้น ไม่แสดงชื่อบุคลากร เงินเดือน หรือรายละเอียดเอกสาร</p>'+(data.role==='admin'?'<button type="button" class="btn light" data-action="drive-health">ตรวจสอบการเชื่อมต่อพื้นที่เอกสาร</button>':'');
     }catch(err){if(el.isConnected)el.textContent=D.message(err);}
   }
   async function refresh() {
@@ -226,6 +227,20 @@
       await refresh();
       toast('บันทึกผลการตรวจสอบแล้ว');
       return;
+    }
+    if(kind==='duties-find'){
+      if(data?.role!=='admin')throw Error('เฉพาะ ADMIN');
+      const u=(data.adminUsers||[]).find(x=>x.email.toLowerCase()===String(vals.email||'').trim().toLowerCase());
+      if(!u)throw Error('ไม่พบบัญชีที่ยืนยันอีเมลแล้ว');
+      return action('edit-duties',u.id);
+    }
+    if(kind==='duties-save'){
+      if(data?.role!=='admin')throw Error('เฉพาะ ADMIN');
+      const u=(data.adminUsers||[]).find(x=>x.id===form.dataset.id);
+      if(!u||u.id===data.id)throw Error('ไม่สามารถเปลี่ยนสิทธิ์บัญชีนี้');
+      const selected=new FormData(form).getAll('duty');
+      if(!window.confirm('ยืนยันกำหนดหน้าที่ของ '+u.email+' เป็น '+(selected.join(', ')||'ไม่มีสิทธิ์เสริม')+'?'))return;
+      await D.setDuties(u.email,selected);dialog.close();await refresh();toast('บันทึกสิทธิ์เฉพาะหน้าที่แล้ว');return;
     }
     if (kind === 'assign-email-role') {
       if (data?.role!=='admin') throw Error('เฉพาะผู้ดูแลระบบ ADMIN');
@@ -718,6 +733,14 @@
         a.href=url;a.download='RMUTI-KKC-personnel.csv';a.click();
         setTimeout(()=>URL.revokeObjectURL(url),1000);
         return;
+      }
+      case 'edit-duties': {
+        if(data?.role!=='admin')throw Error('เฉพาะ ADMIN');
+        const u=(data.adminUsers||[]).find(x=>x.id===id);
+        if(!u||id===data.id)throw Error('ไม่สามารถเปลี่ยนสิทธิ์บัญชีนี้');
+        const ds=(data.allDuties||[]).filter(x=>x.member_id===id).map(x=>x.duty);
+        const labels={reviewer:'REVIEWER — ผู้ตรวจสอบ',approver:'APPROVER — ผู้อนุมัติ',signer:'SIGNER — ผู้มีอำนาจลงนาม',executive:'EXECUTIVE — ผู้บริหาร'};
+        modal('<h2>กำหนดสิทธิ์เฉพาะหน้าที่</h2><p>'+M.esc(u.display_name||u.email)+' · '+M.esc(u.email)+'</p><form data-form="duties-save" data-id="'+M.esc(id)+'"><div class="duty-choices">'+Object.entries(labels).map(([k,v])=>'<label><input type="checkbox" name="duty" value="'+k+'" '+(ds.includes(k)?'checked':'')+'><span>'+M.esc(v)+'</span></label>').join('')+'</div><p class="intro">โปรดตรวจสอบคำสั่งมอบอำนาจก่อนให้สิทธิ์ ระบบจะไม่เพิ่มสิทธิ์ HR ให้อัตโนมัติ</p><button type="submit" class="btn primary">บันทึกหน้าที่</button></form>');return;
       }
       case 'save-role': {
         if (data?.role !== 'admin') throw Error('เฉพาะผู้ดูแลระบบ ADMIN');

@@ -7,7 +7,7 @@ window.HRWorkflow=(()=>{
  const status=(s)=>'<span class="workflow-status st-'+esc(s)+'">'+esc(stages[s]||s)+'</span>';
  function page(d){
    const options=(d.officers||[]).filter(x=>x.id!==d.id);
-   const pick=(name,title)=>'<label class="field"><span>'+title+'</span><select name="'+name+'" required><option value="">เลือกผู้รับผิดชอบ</option>'+options.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.display_name)+'</option>').join('')+'</select></label>';
+   const pick=(name,title)=>'<label class="field"><span>'+title+'</span><select name="'+name+'" required><option value="">เลือกผู้รับผิดชอบ</option>'+options.filter(x=>(x.duties||[]).includes(name.replace('_id',''))).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.display_name)+'</option>').join('')+'</select></label>';
    const form=HRData.demo?'<div class="note">เข้าสู่ระบบ Supabase เพื่อเสนอเอกสารจริง</div>':
    options.length<3?'<div class="note">ต้องมีเจ้าหน้าที่ HR ต่างจากผู้เสนอ 3 บัญชี เพื่อแยกผู้ตรวจสอบ ผู้อนุมัติ และผู้ลงนาม</div>':
    '<form data-form="workflow-propose"><div class="field"><span>เรื่อง</span><input name="title" minlength="5" maxlength="220" required placeholder="ระบุเรื่องเอกสาร"></div>'+
@@ -35,9 +35,9 @@ window.HRWorkflow=(()=>{
   const events=(d.workflowEvents||[]).filter(x=>x.document_id===r.id).sort((a,b)=>a.id-b.id);
   const signature=events.find(x=>x.action==='sign');
   const steps={
-   pending_review:r.reviewer_id===d.id?['review','return','reject']:[],
-   pending_approval:r.approver_id===d.id?['approve','return','reject']:[],
-   pending_signature:r.signer_id===d.id?['sign','return']:[],
+   pending_review:r.reviewer_id===d.id&&(d.duties||[]).includes('reviewer')?['review','return','reject']:[],
+   pending_approval:r.approver_id===d.id&&(d.duties||[]).includes('approver')?['approve','return','reject']:[],
+   pending_signature:r.signer_id===d.id&&(d.duties||[]).includes('signer')?['sign','return']:[],
   }[r.status]||[];
   const actionForm=steps.length?'<form class="no-print" data-form="workflow-advance" data-id="'+esc(r.id)+'"><h3>ดำเนินการ</h3>'+
    '<label class="field"><span>ผลการพิจารณา</span><select name="decision">'+steps.map(x=>'<option value="'+x+'">'+esc(labels[x])+'</option>').join('')+'</select></label>'+

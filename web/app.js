@@ -51,6 +51,7 @@
     if (dialog.open) dialog.close();
     if (!data || authMode==='recover') {
       app.innerHTML = V.login(authMode);
+      document.title = 'HR KKC | ระบบบริหารงานบุคคล';
       return;
     }
     const route = location.hash.slice(1);
@@ -58,7 +59,7 @@
     if (page === 'admin' && data.role !== 'admin') page = 'home';
     if (['hr','directory'].includes(page) && !['hr','admin'].includes(data.role)) page = 'home';
     app.innerHTML = V.layout(data, page, V.page(data, page, adminTab));
-    document.title = M.pages[page] + ' | บุคลากร มทร.อีสาน ขอนแก่น';
+    document.title = M.pages[page] + ' | HR KKC';
     if (page === 'signature') setupSignature();
   }
   async function refresh() {

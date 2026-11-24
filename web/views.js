@@ -565,11 +565,34 @@ window.HRViews = (() => {
       e((d.adminUsers||[]).find(u=>u.id===x.target_id)?.email||'ผู้ใช้งาน'),
       e(roles[x.old_role]||x.old_role)+' → '+e(roles[x.new_role]||x.new_role)
     ]);
-    return panel('จัดการบัญชีและกำหนดสิทธิ์',
-      note('การสมัครใหม่ด้วยอีเมลมหาวิทยาลัยจะได้รับสิทธิ์ USER อัตโนมัติ ส่วน HR และ ADMIN ต้องได้รับการแต่งตั้งจาก ADMIN เท่านั้น')+
+    const pending = (d.pendingEmailRoles||[]).map(p=>[
+      '<b>'+e(p.email)+'</b>',
+      '<span class="role-pill role-'+e(p.role)+'">'+e(roles[p.role]||p.role)+'</span>',
+      e(M.date(p.expires_at,true)),
+      btn('ยกเลิกรายการ','cancel-email-role',p.email,'light','close')
+    ]);
+    return panel('เพิ่มหรือกำหนดสิทธิ์ด้วยอีเมล',
+      '<p class="intro">กรอกอีเมลมหาวิทยาลัย เลือกบทบาท แล้วกดบันทึกสิทธิ์</p>'+
+      '<form data-form="assign-email-role" class="assign-email-role-form">'+
+      field('อีเมลมหาวิทยาลัย',input('email','type="email" maxlength="254" autocomplete="off" inputmode="email" placeholder="name@rmuti.ac.th" required'))+
+      field('กำหนดสิทธิ์',
+        select('role',
+          opt('staff','USER — บุคลากร')+
+          opt('hr','HR — เจ้าหน้าที่บุคคล')+
+          opt('admin','ADMIN — ผู้ดูแลระบบ'),'required'))+
+      '<button class="btn primary" type="submit">'+ic('plus',16)+' เพิ่ม / กำหนดสิทธิ์</button>'+
+      '</form>'+
+      note('บัญชีที่สมัครและยืนยันอีเมลแล้วจะเปลี่ยนสิทธิ์ทันที หากยังไม่ได้สมัคร ระบบจะรอกดยืนยันอีเมลและเปิดสิทธิ์ USER/HR ภายใน 30 วัน โดยไม่สร้างบัญชีหรือส่งอีเมลเชิญเอง')+
+      '<p class="intro">สิทธิ์ ADMIN จะกำหนดได้เฉพาะบัญชีที่ยืนยันอีเมลแล้วเท่านั้น</p>'
+    )+
+    panel('รายการรอสมัครและยืนยันอีเมล',
+      table(['อีเมล','สิทธิ์ที่รอ','หมดอายุ','ดำเนินการ'],pending,'ไม่มีรายการรอเปิดสิทธิ์')
+    )+
+    panel('จัดการบัญชีและกำหนดสิทธิ์',
       '<p class="intro">ADMIN เข้าถึงงาน HR ได้ด้วย ไม่สามารถเปลี่ยนสิทธิ์บัญชีของตนเอง และระบบป้องกันการลบ ADMIN คนสุดท้าย</p>'+
       table(['บุคลากร','สิทธิ์ปัจจุบัน','กำหนดสิทธิ์ใหม่','ดำเนินการ'],people,'ยังไม่มีบัญชีบุคลากร')
-    )+panel('ประวัติการเปลี่ยนสิทธิ์',
+    )+
+    panel('ประวัติการเปลี่ยนสิทธิ์',
       table(['วันเวลา','ผู้เปลี่ยน','บัญชีที่เปลี่ยน','การเปลี่ยนแปลง'],audit,'ยังไม่มีประวัติการเปลี่ยนสิทธิ์')
     );
   }

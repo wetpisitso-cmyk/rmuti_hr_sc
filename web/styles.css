@@ -1632,3 +1632,66 @@ tr[hidden]{display:none!important}
 @media(min-width:1050px){.salary-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:550px){.salary-paper{padding:10mm 6mm;min-height:0}.salary-actions{grid-template-columns:1fr}.salary-metric{padding:12px}}
 @media print{.salary-paper{padding:0;border:0;min-height:0;width:100%;box-shadow:none}.salary-paper,.salary-workflow{font-size:16pt!important}.salary-paper h2{font-size:20pt!important}.salary-draft-mark{color:#a63c30!important}.salary-paper-foot{font-size:12pt}}
+
+/* RMUTI KKC — campus login portal only. All authenticated pages retain their theme. */
+.login.campus-login{display:grid;grid-template-columns:minmax(470px,40%) minmax(0,1fr);grid-template-areas:"left photo";align-items:stretch;justify-items:stretch;min-height:100vh;min-height:100dvh;padding:0;background:#102744;isolation:isolate;overflow:visible;font-family:"Noto Sans Thai",sans-serif}
+.login.campus-login::before,.login.campus-login::after{display:none;content:none}
+.campus-left{grid-area:left;position:relative;display:flex;align-items:center;justify-content:center;isolation:isolate;padding:clamp(24px,3.2vh,44px) clamp(25px,3.1vw,62px);min-width:0;background:radial-gradient(ellipse at 95% 96%,#183d75 0,transparent 43%),linear-gradient(148deg,#102744 0%,#0d2342 70%,#10294f 100%);overflow:hidden}
+.campus-left::before{content:"";position:absolute;z-index:-1;bottom:-110px;left:-120px;width:135%;height:250px;transform:rotate(15deg);border-top:18px solid #f48120;background:#142f59;opacity:.85;border-radius:50%}
+.campus-left::after{content:"";position:absolute;z-index:-1;bottom:-190px;right:-110px;width:110%;height:300px;border:35px solid #21528f;border-radius:50%;opacity:.6;transform:rotate(-20deg)}
+.campus-inner{width:100%;max-width:510px;position:relative}
+.campus-brand{display:flex;align-items:center;justify-content:center;gap:clamp(15px,2vw,29px);margin-bottom:clamp(19px,2.5vh,30px)}
+.campus-crest{height:clamp(100px,16vh,154px);width:auto;object-fit:contain;flex-shrink:0}
+.campus-brand-divider{height:94px;width:1px;background:linear-gradient(transparent,#cfdaec,transparent)}
+.campus-hr{max-width:242px;min-width:0;text-align:left;font-weight:740;line-height:1.35}
+.campus-hr img{display:block;width:100%;max-height:103px;object-fit:contain;object-position:left}
+.campus-hr-th{font-size:clamp(11px,1vw,15px);color:#fff;margin-top:4px}
+.campus-hr-kkc{font-size:clamp(11px,.99vw,15px);color:#ff9a30}
+.campus-intro{margin-bottom:clamp(16px,2.4vh,26px);color:#fff}
+.campus-accent{display:block;width:46px;height:4px;background:#f48120;border-radius:2px;margin-bottom:12px}
+.login.campus-login .campus-intro h1{margin:0 0 12px;color:#fff;text-align:left;font-size:clamp(23px,2.1vw,34px);font-weight:800;letter-spacing:-.025em;line-height:1.3}
+.campus-intro h1 span{color:#ff941f}
+.campus-intro p{border-left:3px solid #56b7e5;margin:0;padding-left:12px;font-size:clamp(12px,1vw,16px);color:#e2edfb;line-height:1.65}
+.campus-mobile-break{display:none}
+.campus-login .campus-auth{width:100%;max-width:none;margin:0;border:1px solid #dce5f2;border-top:1px solid #dce5f2;border-radius:17px;padding:clamp(20px,2.1vw,30px);background:linear-gradient(150deg,#fff,#f4f7fc);box-shadow:0 18px 40px #04152c52}
+.campus-auth .auth-subtitle{text-align:left;font-size:25px;margin:0 0 10px;line-height:1.3;color:#102744;font-weight:800}
+.campus-auth .auth-subtitle::after{content:"";display:block;width:36px;height:4px;margin-top:8px;background:#f48120;border-radius:2px}
+.campus-auth .sso-domain{text-align:left;margin:4px 0 13px;color:#4e6480;font-size:13px}
+.campus-auth .field{margin:0 0 10px;gap:5px}
+.campus-auth .field>span:first-child{color:#314a6a;font-size:13px}
+.campus-auth input,.campus-auth select{min-height:44px;border:1px solid #bccbe0;border-radius:8px;background:#fff;font-size:14px}
+.campus-password{position:relative}
+.campus-password .campus-password-input{position:relative;display:flex;align-items:center}
+.campus-password-input>svg{position:absolute;left:12px;color:#62768f;pointer-events:none}
+.campus-password-input input{width:100%;padding-left:40px;padding-right:45px}
+.campus-eye{position:absolute;bottom:3px;right:3px;height:38px;width:40px;display:grid;place-items:center;border:0;background:transparent;color:#586e89;cursor:pointer;border-radius:6px}
+.campus-eye:focus-visible,.campus-nav button:focus-visible,.campus-register:focus-visible,.campus-help:focus-visible{outline:3px solid #f48120;outline-offset:2px}
+.campus-login-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#60748d;margin:2px 0 9px}
+.campus-login-meta>span{display:flex;align-items:center;gap:5px}
+.campus-login-meta .auth-switch{padding:3px 0;margin:0;color:#b4510b;font-size:13px}
+.campus-login .campus-auth .btn.primary{width:100%;min-height:45px;background:linear-gradient(110deg,#ff9027,#df6509);border:1px solid #e57314;border-radius:9px;box-shadow:0 4px 9px #d96d1929;font-weight:750;font-size:16px;color:#fff}
+.campus-login .campus-auth .btn.primary:hover{background:linear-gradient(110deg,#e77a14,#c55000)}
+.campus-auth .actions{margin:8px 0 0}
+.campus-auth-secondary{margin-top:12px;display:grid;gap:8px}
+.campus-register{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:9px 10px;border:1px solid #294d81;border-radius:8px;color:#173b70;background:transparent;font:700 13px/1.35 "Noto Sans Thai",sans-serif;cursor:pointer}
+.campus-register:hover{background:#e9f1ff}
+.campus-or{display:flex;gap:10px;align-items:center;font-size:11px;color:#798ba2}
+.campus-or::before,.campus-or::after{content:"";height:1px;background:#d0dceb;flex:1}
+.campus-help{display:flex;align-items:center;justify-content:center;gap:7px;padding:2px 5px;color:#123f87;background:transparent;border:0;text-decoration:underline;text-underline-offset:3px;font:700 13px "Noto Sans Thai",sans-serif;cursor:pointer}
+.campus-auth .sso-approval-note{margin:9px 0 0;font-size:11px;color:#65768d;text-align:center}
+.campus-footer{color:#a5b9d6;font-size:10px;text-align:center;letter-spacing:.09em;margin-top:14px}
+.campus-footer span{color:#f48120;margin:0 6px}
+.campus-photo{grid-area:photo;position:sticky;top:0;height:100vh;height:100dvh;min-width:0;align-self:start;overflow:hidden;background:#234c76}
+.campus-building{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:51% center}
+.campus-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,36,71,.70) 0%,rgba(9,36,71,.10) 20%,transparent 55%,rgba(9,36,71,.28) 100%);pointer-events:none}
+.campus-nav{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;gap:clamp(12px,1.7vw,31px);flex-wrap:wrap;padding:24px 20px}
+.campus-nav button{border:0;color:#fff;background:none;font:650 clamp(11px,.93vw,15px)/1.5 "Noto Sans Thai",sans-serif;text-shadow:0 1px 4px #0b244f70;cursor:pointer;padding:10px 0;position:relative}
+.campus-nav button.current::after,.campus-nav button:hover::after{content:"";height:3px;position:absolute;left:0;right:0;bottom:2px;background:#f48120;border-radius:2px}
+.campus-photo-caption{position:absolute;z-index:1;bottom:28px;left:32px;display:flex;align-items:center;gap:12px;color:#fff;text-shadow:0 1px 4px #102744}
+.campus-photo-caption>span{height:37px;width:4px;background:#f48120;border-radius:2px}
+.campus-photo-caption strong,.campus-photo-caption small{display:block}
+.campus-photo-caption strong{font-size:16px;letter-spacing:.11em}
+.campus-photo-caption small{font-size:12px;color:#e5eefc}
+@media(min-width:1050px) and (max-height:760px){.campus-left{padding-block:17px}.campus-brand{margin-bottom:14px}.campus-crest{height:105px}.campus-intro{margin-bottom:16px}.campus-login .campus-auth{padding:19px}.campus-footer{margin-top:10px}}
+@media(max-width:900px){.login.campus-login{grid-template-columns:1fr;grid-template-areas:"photo" "left";min-height:100vh}.campus-photo{position:relative;height:clamp(195px,34vw,315px);top:auto}.campus-building{object-position:center 32%}.campus-photo-caption{bottom:15px;left:20px}.campus-nav{padding:12px 16px;gap:8px 18px}.campus-nav button{font-size:12px;padding:5px 0 8px}.campus-left{padding:25px 22px 30px}.campus-brand{justify-content:flex-start;gap:20px}.campus-crest{height:110px}.campus-hr{max-width:210px}.campus-hr-th,.campus-hr-kkc{font-size:13px}.login.campus-login .campus-intro h1{font-size:clamp(23px,5vw,31px)}.campus-intro p{font-size:14px}}
+@media(max-width:380px){.campus-left{padding-inline:15px}.campus-brand{gap:12px}.campus-crest{height:94px}.campus-hr{max-width:180px}.campus-nav{gap:2px 11px}.campus-nav button{font-size:11px}.campus-mobile-break{display:block}.campus-login .campus-auth{padding:18px}}

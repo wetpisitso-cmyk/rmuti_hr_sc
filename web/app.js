@@ -429,6 +429,34 @@
       case 'reload':
         await refresh();
         return;
+      case 'login-home':
+        if(authMode!=='recover'){authMode='login';render();}
+        return;
+      case 'toggle-login-password': {
+        const input=document.getElementById('campus-password');
+        if(!input)return;
+        const reveal=input.type==='password';
+        input.type=reveal?'text':'password';
+        const control=document.querySelector('[data-action="toggle-login-password"]');
+        if(control){
+          control.setAttribute('aria-pressed',String(reveal));
+          control.setAttribute('aria-label',reveal?'ซ่อนรหัสผ่าน':'แสดงรหัสผ่าน');
+        }
+        return;
+      }
+      case 'public-login-info': {
+        if(!['services','privacy','terms','contact','help'].includes(id))return;
+        if(id==='services'){
+          modal('<h2>การให้บริการบุคลากร</h2><p>บริการภายในระบบ HR สำหรับผู้ที่เข้าสู่ระบบแล้ว</p><ul><li>ข้อมูลส่วนบุคคลและประวัติการศึกษา</li><li>ประวัติการดำรงตำแหน่งและพัฒนาบุคลากร</li><li>ยื่นคำขอหนังสือรับรองและติดตามสถานะ</li><li>เสนอเอกสาร ตรวจสอบ อนุมัติ และลงนามตามสิทธิ์</li><li>คำสั่งและกิจกรรมบุคลากร</li></ul><p>การเข้าถึงขึ้นอยู่กับสิทธิ์ USER / HR / ADMIN</p>');
+          return;
+        }
+        if(id==='help'){
+          modal('<h2>คู่มือการใช้งานเบื้องต้น</h2><ol><li>สมัครสมาชิกด้วยอีเมล @rmuti.ac.th</li><li>เปิดอีเมลและกดยืนยันบัญชี</li><li>เข้าสู่ระบบด้วยรหัสผ่านที่ตั้งไว้</li><li>ตรวจสอบข้อมูลส่วนตัวและเลือกบริการที่ต้องการ</li><li>ติดตามคำขอจากศูนย์รวมงาน</li></ol><p>หากลืมรหัสผ่าน ให้ใช้ปุ่มลืมรหัสผ่านในหน้าเข้าสู่ระบบ</p>');
+          return;
+        }
+        modal(V.page(null,id,'queue'));
+        return;
+      }
       case 'show-signup':
         authMode='register';
         render();

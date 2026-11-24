@@ -1148,39 +1148,37 @@ window.HRViews = (() => {
         : '')
     );
   }
-  function login(mode = 'login') {
-    const brand='<div class="auth-heading"><span class="brandmark">hr</span>' +
-      '<p class="kicker">มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น</p>' +
-      '<h1>ระบบสารสนเทศบุคลากร</h1></div>';
-    if (HRData.demo) return '<main class="login"><div class="login-box">' +brand+
+  function loginCard(mode = 'login') {
+    const brand='';
+    if (HRData.demo) return '<section class="login-box campus-auth">' +brand+
       '<p class="intro">เลือกบทบาทเพื่อทดลองใช้งานด้วยข้อมูลสมมติ</p><div class="login-roles">'+
       btn('ทดลองเป็นบุคลากร','role',M.demoUser,'primary','user')+
-      btn('ทดลองเป็นเจ้าหน้าที่ HR','role',M.demoHR,'light','brief')+'</div></div></main>';
+      btn('ทดลองเป็นเจ้าหน้าที่ HR','role',M.demoHR,'light','brief')+'</div></section>';
     const emailInfo='<p class="sso-domain">สำหรับอีเมลมหาวิทยาลัย <strong>@rmuti.ac.th</strong> เท่านั้น</p>';
-    if (mode === 'sent') return '<main class="login"><div class="login-box">'+brand+
+    if (mode === 'sent') return '<section class="login-box campus-auth">'+brand+
       '<div class="auth-success" role="status"><h2>กรุณาตรวจสอบอีเมลของคุณ</h2>'+
       '<p>ระบบรับคำขอสมัครแล้ว โปรดเปิดกล่องจดหมายมหาวิทยาลัยและกดลิงก์ยืนยันอีเมล</p>'+
       '<p>หลังยืนยันเสร็จ ให้กลับมาที่ระบบเพื่อเข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่ตั้งไว้</p>'+
       '<p>หากไม่พบอีเมล ลองตรวจโฟลเดอร์จดหมายขยะ และติดต่อผู้ดูแลระบบหากยังไม่ได้รับ</p></div>'+
       '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button>'+
-      '</div></main>';
-    if (mode === 'forgot') return '<main class="login"><div class="login-box">'+brand+
+      '</section>';
+    if (mode === 'forgot') return '<section class="login-box campus-auth">'+brand+
       '<h2 class="auth-subtitle">ตั้งรหัสผ่านใหม่</h2><p class="intro">กรอกอีเมลมหาวิทยาลัยที่ใช้สมัคร เพื่อรับลิงก์ตั้งรหัสผ่านใหม่</p>'+
       '<form data-form="forgot-password">'+
       field('อีเมลมหาวิทยาลัย',input('email','type="email" autocomplete="email" placeholder="name@rmuti.ac.th" required'))+
       saveButton('ส่งอีเมลตั้งรหัสผ่านใหม่','arrow')+'</form>'+
-      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button></div></main>';
-    if (mode === 'reset-sent') return '<main class="login"><div class="login-box">'+brand+
+      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button></section>';
+    if (mode === 'reset-sent') return '<section class="login-box campus-auth">'+brand+
       '<div class="auth-success"><h2>ตรวจสอบกล่องจดหมายของคุณ</h2>'+
       '<p>หากอีเมลนี้มีบัญชีอยู่ ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ให้</p></div>'+
-      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button></div></main>';
-    if (mode === 'recover') return '<main class="login"><div class="login-box">'+brand+
+      '<button type="button" class="auth-switch" data-action="show-login">กลับหน้าเข้าสู่ระบบ</button></section>';
+    if (mode === 'recover') return '<section class="login-box campus-auth">'+brand+
       '<h2 class="auth-subtitle">กำหนดรหัสผ่านใหม่</h2>'+
       '<form data-form="set-password">'+
       field('รหัสผ่านใหม่ (อย่างน้อย 10 ตัวอักษร)',input('password','type="password" minlength="10" autocomplete="new-password" required'))+
       field('ยืนยันรหัสผ่านใหม่',input('confirm_password','type="password" minlength="10" autocomplete="new-password" required'))+
-      saveButton('บันทึกรหัสผ่านใหม่','save')+'</form></div></main>';
-    if (mode === 'register') return '<main class="login"><div class="login-box">'+brand+
+      saveButton('บันทึกรหัสผ่านใหม่','save')+'</form></section>';
+    if (mode === 'register') return '<section class="login-box campus-auth">'+brand+
       '<h2 class="auth-subtitle">ลงทะเบียนบุคลากรใหม่</h2>'+emailInfo+
       '<p class="intro">สมัครด้วยอีเมลมหาวิทยาลัยและยืนยันอีเมลด้วยตัวเอง ไม่ต้องรอ Admin อนุมัติ</p>'+
       '<form data-form="signup" autocomplete="on">'+
@@ -1198,18 +1196,32 @@ window.HRViews = (() => {
       '<p class="sso-approval-note">สิทธิ์เริ่มต้นคือ “บุคลากร” (Staff) โดยไม่สามารถอนุมัติหรือลงนามแทน HR ได้</p>'+
       saveButton('สมัครสมาชิกและส่งอีเมลยืนยัน','arrow')+'</form>'+
       '<button type="button" class="auth-switch" data-action="show-login">มีบัญชีแล้ว? เข้าสู่ระบบ</button>'+
-      '</div></main>';
-    return '<main class="login"><div class="login-box">'+brand+
-      '<h2 class="auth-subtitle">เข้าสู่ระบบบุคลากร</h2>'+emailInfo+
+      '</section>';
+    return '<section class="login-box campus-auth">'+brand+
+      '<h2 class="auth-subtitle">เข้าสู่ระบบ</h2>'+emailInfo+
       '<form data-form="login">'+
       field('อีเมลมหาวิทยาลัย',input('email','type="email" autocomplete="username" placeholder="name@rmuti.ac.th" required'))+
-      field('รหัสผ่าน',input('password','type="password" autocomplete="current-password" required'))+
-      saveButton('เข้าสู่ระบบ','arrow')+'</form>'+
-      '<div class="auth-links">'+
-      '<button type="button" class="auth-switch" data-action="show-signup">สมัครสมาชิกด้วยอีเมลมหาวิทยาลัย</button>'+
-      '<button type="button" class="auth-switch" data-action="show-forgot">ลืมรหัสผ่าน</button>'+
-      '</div><p class="sso-approval-note">ผู้สมัครใหม่ต้องยืนยันอีเมลก่อนใช้งาน ไม่ใช่ระบบ RMUTI SSO</p>'+
-      '</div></main>';
+      '<div class="campus-password"><label class="field" for="campus-password"><span>รหัสผ่าน</span><span class="campus-password-input">'+ic('shield',19)+'<input id="campus-password" name="password" type="password" autocomplete="current-password" placeholder="กรอกรหัสผ่าน" required></span></label><button class="campus-eye" type="button" data-action="toggle-login-password" aria-label="แสดงรหัสผ่าน" aria-pressed="false"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>'+
+      '<div class="campus-login-meta"><span>'+ic('shield',15)+' บัญชีมหาวิทยาลัย</span><button type="button" class="auth-switch" data-action="show-forgot">ลืมรหัสผ่าน?</button></div>'+saveButton('เข้าสู่ระบบ','logout')+'</form>'+
+      '<div class="campus-auth-secondary">'+
+      '<button type="button" class="campus-register" data-action="show-signup">'+ic('user',20)+' สมัครสมาชิกด้วยอีเมลมหาวิทยาลัย</button>'+
+      '<div class="campus-or"><span>หรือ</span></div>'+
+      '<button type="button" class="campus-help" data-action="public-login-info" data-id="help">'+ic('help',20)+' คู่มือการใช้งาน</button>'+
+      '</div><p class="sso-approval-note">ผู้สมัครใหม่ต้องยืนยันอีเมลก่อนใช้งาน · RMUTI SSO ยังไม่เปิดใช้งาน</p>'+
+      '</section>';
+  }
+
+  function login(mode='login') {
+    const nav = [['home','หน้าหลัก'],['services','การให้บริการ'],['privacy','นโยบายคุ้มครองข้อมูลส่วนบุคคล'],['terms','ข้อกำหนดการใช้งาน'],['contact','ช่องทางการติดต่อ']];
+    const links=nav.map(([key,label])=>'<button type="button" '+(key==='home'?'class="current" aria-current="page" data-action="login-home"':'data-action="public-login-info" data-id="'+key+'"')+'>'+e(label)+'</button>').join('');
+    return '<main class="login campus-login" id="content" tabindex="-1">'+
+      '<aside class="campus-photo" aria-label="อาคารมหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น"><img class="campus-building" src="./assets/kkc-building.webp" alt="อาคารมหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น" fetchpriority="high"><nav class="campus-nav" aria-label="เมนูหน้าเข้าสู่ระบบ">'+links+'</nav><div class="campus-photo-caption"><span></span><div><strong>RMUTI KHON KAEN</strong><small>Human Resources Information System</small></div></div></aside>'+
+      '<section class="campus-left"><div class="campus-inner">'+
+      '<div class="campus-brand"><img class="campus-crest" src="./assets/rmuti-crest.png" alt="ตรามหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน"><div class="campus-brand-divider"></div><div class="campus-hr"><img src="./assets/hr-wordmark.svg" alt="Human Resources"><div class="campus-hr-th">แผนกงานบริหารงานบุคคล</div><div class="campus-hr-kkc">มทร.อีสาน วิทยาเขตขอนแก่น</div></div></div>'+
+      '<div class="campus-intro"><span class="campus-accent"></span><h1>ระบบบริหารจัดการสารสนเทศ<br><span>แผนกงานบริหารงานบุคคล</span></h1><p>มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน<br class="campus-mobile-break"> วิทยาเขตขอนแก่น</p></div>'+
+      loginCard(mode)+
+      '<footer class="campus-footer">RMUTI HR SMART MIS <span>·</span> ONE STOP HR SERVICE</footer>'+
+      '</div></section></main>';
   }
 
   return {

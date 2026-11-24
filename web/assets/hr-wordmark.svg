@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 137" role="img" aria-label="Human Resources">
+  <path fill="#ffffff" d="M10 2Q7 2 7 7V81Q7 85 11 85H24Q28 85 28 81V53H60V81Q60 85 64 85H78Q82 85 82 81V6Q82 2 78 2H65Q61 2 61 6V34H28V6Q28 2 24 2Z"/>
+  <path fill="#fb870e" d="M86 48H103Q128 48 128 74Q128 91 114 99L127 128Q129 132 124 132H108L95 105H82V127Q82 132 78 132H64Q61 132 61 128V87H97Q108 87 108 76Q108 64 97 64H86Z"/>
+  <g font-family="'Noto Sans Thai',Arial,sans-serif" font-weight="800">
+    <text x="89" y="43" font-size="39" letter-spacing="-1.2" fill="#ffffff">uman</text>
+    <text x="130" y="130" font-size="37" letter-spacing="-1.1" fill="#fb870e">esources</text>
+  </g>
+</svg>

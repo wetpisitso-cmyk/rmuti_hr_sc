@@ -752,6 +752,66 @@ window.HRViews = (() => {
       '</form>'
     );
   }
+
+  function dashMetric(label,value,icon,tone,detail,route){
+    const tag=route?'a':'div';
+    return '<'+tag+' class="dash-metric dash-'+tone+'"'+(route?' href="#'+e(route)+'"':'')+'><div class="dash-metric-top"><span class="dash-icon">'+ic(icon,22)+'</span><span>'+e(label)+'</span>'+(route?'<span class="dash-go">'+ic('arrow',16)+'</span>':'')+'</div><strong>'+e(Number(value||0).toLocaleString('th-TH'))+'</strong><small>'+e(detail)+'</small></'+tag+'>';
+  }
+  function dashSection(title,sub,body,aside='',cls=''){
+    return '<section class="dash-section '+cls+'"><header class="dash-section-head"><div><h2>'+e(title)+'</h2>'+(sub?'<p>'+e(sub)+'</p>':'')+'</div>'+aside+'</header>'+body+'</section>';
+  }
+  function dashboardHome(d){
+    const my=(d.requests||[]).filter(r=>r.owner_id===d.id);
+    const wf=d.workflows||[],duties=d.duties||[];
+    const tasks=wf.filter(r=>(r.status==='pending_review'&&r.reviewer_id===d.id&&duties.includes('reviewer'))||(r.status==='pending_approval'&&r.approver_id===d.id&&duties.includes('approver'))||(r.status==='pending_signature'&&r.signer_id===d.id&&duties.includes('signer'))||(r.status==='returned'&&r.requester_id===d.id));
+    const ready=my.filter(r=>r.status==='ready'),pending=my.filter(r=>['submitted','review'].includes(r.status)),regs=(d.registrations||[]).filter(r=>r.owner_id===d.id);
+    const org=orgOf(d,d.profile);
+    const shortcuts=[
+      ['salary','cert','หนังสือรับรองเงินเดือน','ยื่นคำขอออนไลน์'],
+      ['contract','file','สัญญาจ้าง / ก.พ. 7','ขอเอกสารประวัติ'],
+      ['profile','user','ข้อมูลส่วนตัว','ตรวจสอบและปรับปรุงข้อมูล'],
+      ['workflow','pen','เสนอเอกสาร / ลงนาม','ติดตามและดำเนินการ'],
+      ['search','search','ค้นหาคำสั่ง','ค้นหาคำสั่งมหาวิทยาลัย'],
+      ['activities','calendar','กิจกรรมบุคลากร','ดูและลงทะเบียนกิจกรรม'],
+      ['training','help','ประวัติการพัฒนา','บันทึกการอบรม'],
+      ['education','help','ประวัติการศึกษา','บันทึกวุฒิการศึกษา'],
+      ['positions','brief','ประวัติตำแหน่ง','บันทึกประวัติการทำงาน']
+    ];
+    if(isHR(d))shortcuts.push(['hr','brief','งานเจ้าหน้าที่ HR','จัดการคำขอบุคลากร']);
+    if(d.role==='admin'||duties.includes('executive'))shortcuts.push(['executive','performance','Dashboard ผู้บริหาร','ดูภาพรวมและรายงาน']);
+    if(d.role==='admin')shortcuts.push(['admin','shield','จัดการสิทธิ์','กำหนดบทบาทผู้ใช้งาน']);
+    const serviceGrid='<div class="dash-services">'+shortcuts.map(([route,icon,title,desc])=>'<a href="#'+route+'" class="dash-service"><span class="dash-icon">'+ic(icon,21)+'</span><span class="dash-service-copy"><b>'+e(title)+'</b><small>'+e(desc)+'</small></span>'+ic('arrow',15)+'</a>').join('')+'</div>';
+    const actionItems=[...tasks.map(r=>['file',r.title,'workflow-detail',r.id]),...ready.map(r=>['cert',(M.kinds[r.kind]||r.kind)+' · พร้อมรับ','request-detail',r.id])];
+    const taskList=actionItems.length?'<div class="dash-task-list">'+actionItems.slice(0,5).map(([icon,title,action,id])=>'<div class="dash-task"><span class="dash-icon">'+ic(icon,18)+'</span><b>'+e(title)+'</b>'+btn('เปิด',action,id,'light','arrow')+'</div>').join('')+'</div>':'<div class="dash-empty">'+ic('check',30)+'<b>ไม่มีงานที่ต้องดำเนินการ</b><span>เมื่อมีรายการใหม่ จะแสดงที่นี่</span></div>';
+    const metrics=dashMetric('คำขอกำลังดำเนินการ',pending.length,'clock','orange','รายการของท่าน','requests')+dashMetric('หนังสือพร้อมรับ',ready.length,'cert','green','เอกสารของท่าน','requests')+dashMetric('งานที่รอดำเนินการ',tasks.length,'pen','blue','เอกสารที่ได้รับมอบหมาย / ส่งคืน','tasks')+dashMetric('กิจกรรมที่ลงทะเบียน',regs.length,'calendar','violet','รายการลงทะเบียนของท่าน','history');
+    return '<div class="smart-dashboard"><section class="dash-hero"><div><span class="dash-eyebrow">RMUTI KKC · HR SMART MIS</span><h2>ยินดีต้อนรับ '+e(M.person(d.profile))+'</h2><p>'+e(org?.unit||'บุคลากรมหาวิทยาลัย')+' · ศูนย์บริการบุคลากรออนไลน์</p><a href="#profile" class="dash-hero-link">ข้อมูลส่วนตัว '+ic('arrow',15)+'</a></div><div class="dash-hero-art"><img src="./assets/rmuti-crest.png" alt="" aria-hidden="true"></div></section>'+
+    '<div class="dash-kpis">'+metrics+'</div>'+
+    '<div class="dash-main-grid">'+dashSection('บริการที่ใช้งานได้','เลือกบริการที่ต้องการ',serviceGrid,'','dash-services-section')+dashSection('งานที่ต้องติดตาม','รายการที่เกี่ยวข้องกับคุณ',taskList,link('tasks','ดูทั้งหมด','dash-more'))+'</div>'+
+    dashSection('คำขอล่าสุดของท่าน','ติดตามความคืบหน้าและดาวน์โหลดเอกสาร',requestTable(d,recent(my).slice(0,5)),link('requests','ดูทั้งหมด','dash-more'))+
+    '</div>';
+  }
+  function executiveDashboard(x,d){
+    const n=v=>Number(v||0);
+    const bars=(title,sub,rows,cls='')=>{
+      const list=Array.isArray(rows)?rows:[];
+      const total=list.reduce((a,r)=>a+n(r.n),0);
+      const body=list.length?'<div class="dash-bars">'+list.map(r=>{const pct=total?Math.round(n(r.n)/total*100):0;return '<div class="dash-bar-row"><div><span>'+e(M.stages[r.label]||r.label)+'</span><b>'+e(n(r.n).toLocaleString('th-TH'))+' <small>('+pct+'%)</small></b></div><div class="dash-bar-track"><i style="width:'+Math.max(0,Math.min(100,pct))+'%"></i></div></div>'}).join('')+'</div>':'<div class="dash-empty compact">'+ic('performance',26)+'<span>ยังไม่มีข้อมูล</span></div>';
+      return dashSection(title,sub,body,'',cls);
+    };
+    const reqs=Array.isArray(x.requests)?x.requests:[];
+    const count=label=>n(reqs.find(r=>r.label===label)?.n);
+    const stages=[['submitted','ส่งคำขอแล้ว','blue'],['review','กำลังตรวจสอบ','orange'],['ready','พร้อมรับ','green'],['done','รับเอกสารแล้ว','violet'],['rejected','ส่งคืนคำขอ','gray']];
+    const total=stages.reduce((a,[key])=>a+count(key),0);
+    const statusBody='<div class="dash-request-total"><strong>'+e(total.toLocaleString('th-TH'))+'</strong><span>คำขอทั้งหมด</span></div><div class="dash-stack" aria-hidden="true">'+stages.map(([key,label,tone])=>'<span class="seg-'+tone+'" style="width:'+(total?count(key)/total*100:0)+'%"></span>').join('')+'</div><div class="dash-status-list">'+stages.map(([key,label,tone])=>'<div><span><i class="seg-'+tone+'"></i>'+e(label)+'</span><b>'+e(count(key).toLocaleString('th-TH'))+'</b></div>').join('')+'</div>';
+    const follow=[['ยังไม่ระบุสังกัด',x.missing_org],['ยังไม่ระบุตำแหน่ง',x.missing_position],['ประวัติอบรมรอตรวจ',x.training_pending],['ประวัติการศึกษารอตรวจ',x.education_pending],['ประวัติตำแหน่งรอตรวจ',x.positions_pending]];
+    return '<div class="smart-dashboard"><section class="dash-hero dash-exec-hero"><div><span class="dash-eyebrow">RMUTI KKC · EXECUTIVE OVERVIEW</span><h2>ภาพรวมงานบริหารบุคลากร</h2><p>ข้อมูลบัญชีที่ยืนยันแล้วในระบบ ไม่ใช่จำนวนอัตรากำลังทั้งหมด</p></div><div class="dash-asof">'+ic('clock',18)+'<div><small>ข้อมูล ณ</small><b>'+e(M.date(x.as_of,true))+'</b></div></div></section>'+
+    '<div class="dash-kpis">'+dashMetric('บัญชีบุคลากร',x.accounts,'user','blue','บัญชีที่ยืนยันแล้ว')+dashMetric('คำขอค้างดำเนินการ',x.open_requests,'clock','orange','ส่งคำขอแล้ว / กำลังตรวจสอบ')+dashMetric('เอกสารรอพิจารณา',x.pending_documents,'file','violet','รอตรวจสอบ / อนุมัติ / ลงนาม')+dashMetric('หนังสือพร้อมรับ / รับแล้ว',x.issued_requests,'cert','green','คำขอที่ดำเนินการแล้ว')+'</div>'+
+    '<div class="dash-exec-grid">'+bars('บุคลากรแยกตามหน่วยงาน','จำนวนและสัดส่วนบัญชี',x.faculties,'dash-faculties')+dashSection('สถานะคำขอหนังสือรับรอง','แยกตามขั้นตอน',statusBody,'','dash-status')+'</div>'+
+    '<div class="dash-exec-three">'+bars('ประเภทบุคลากร','จำนวนบัญชีแยกประเภท',x.staff_types)+bars('สายงาน','วิชาการ / สนับสนุน / อื่น ๆ',x.tracks)+bars('วุฒิการศึกษาสูงสุด','เฉพาะวุฒิที่ผ่านการตรวจสอบ',x.education)+'</div>'+
+    '<div class="dash-exec-grid">'+dashSection('ข้อมูลที่ต้องติดตาม','รายการที่ควรตรวจสอบเพิ่มเติม','<div class="dash-status-list">'+follow.map(([label,value])=>'<div><span>'+e(label)+'</span><b class="'+(n(value)>0?'dash-attention':'')+'">'+e(n(value).toLocaleString('th-TH'))+'</b></div>').join('')+'</div>')+dashSection('ผลการดำเนินงาน','ตัวเลขสะสม','<div class="dash-result"><span>'+ic('check',23)+'</span><div><small>เอกสารลงนามภายในแล้ว</small><strong>'+e(n(x.signed_documents).toLocaleString('th-TH'))+'</strong></div></div><div class="dash-result"><span>'+ic('help',23)+'</span><div><small>ชั่วโมงพัฒนาที่ตรวจสอบแล้ว</small><strong>'+e(n(x.training_hours).toLocaleString('th-TH'))+'</strong></div></div>')+'</div>'+
+    '<div class="dash-foot"><span>รายงานสรุปเท่านั้น · ไม่แสดงข้อมูลส่วนบุคคลหรือเงินเดือน</span>'+(d.role==='admin'?btn('ตรวจสอบพื้นที่เอกสาร','drive-health','','light','shield'):'')+'</div></div>';
+  }
+
   function stats(d) {
     const my = d.requests.filter((r) => r.owner_id === d.id);
     const items = [
@@ -812,34 +872,9 @@ window.HRViews = (() => {
       case 'training': return trainingPage(d);
       case 'education': return historyPage(d,'education');
       case 'positions': return historyPage(d,'positions');
-      case 'executive': return (d.role==='admin'||(d.duties||[]).includes('executive'))?panel('ภาพรวมสำหรับผู้บริหาร','<div id="executive-summary" role="status">กำลังโหลดข้อมูลสรุป...</div>') : note('เฉพาะผู้ที่ได้รับอนุญาต');
+      case 'executive': return (d.role==='admin'||(d.duties||[]).includes('executive'))?'<div id="executive-summary" aria-live="polite"><div class="dash-section">กำลังโหลดข้อมูลสรุป...</div></div>' : note('เฉพาะผู้ที่ได้รับอนุญาต');
       case 'directory': return directoryPage(d);
-      case 'home':
-        return (
-          profileBanner(d) +
-          stats(d) +
-          panel(
-            'บริการบุคลากร',
-            '<div class="shortcuts">' +
-              [
-                ['profile', 'user'],
-                ['salary', 'cert'],
-                ['search', 'search'],
-                ['activities', 'calendar'],
-                ['tasks', 'clock'],
-                ['training', 'calendar'],
-                ...(isHR(d)?[['directory','user']]:[]),
-              ]
-                .map(([k, i]) => link(k, M.pages[k], 'shortcut', i))
-                .join('') +
-              '</div>',
-          ) +
-          panel(
-            'คำขอล่าสุดของท่าน',
-            requestTable(d, recent(mine(d.requests)).slice(0, 5)),
-            link('requests', 'ดูทั้งหมด'),
-          )
-        );
+      case 'home': return dashboardHome(d);
       case 'workflow':
         return HRWorkflow.page(d);
       case 'profile':
@@ -1332,6 +1367,7 @@ window.HRViews = (() => {
     salaryEditor,salaryContent,salaryPreview,
     login,
     publicLoginInfo,
+    executiveDashboard,
     num,
   };
 })();

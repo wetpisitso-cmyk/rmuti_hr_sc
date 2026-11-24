@@ -42,7 +42,7 @@ window.MIS = (() => {
   ];
   const tracks = ['สายสนับสนุน', 'สายวิชาการ'];
   const pages = {
-    home: 'หน้าหลัก',
+    home: 'หน้าหลัก / Dashboard',
     profile: 'ข้อมูลส่วนตัวทั่วไป',
     signature: 'ลายเซ็นอิเล็กทรอนิกส์',
     assets: 'ครุภัณฑ์ส่วนตัว',

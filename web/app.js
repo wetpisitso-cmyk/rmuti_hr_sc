@@ -55,7 +55,7 @@
       return;
     }
     const route = location.hash.slice(1);
-    page = Object.hasOwn(M.pages, route) ? route : 'profile';
+    page = Object.hasOwn(M.pages, route) ? route : 'home';
     if (page==='admin'&&data.role!=='admin') page='home';
     if(page==='executive'&&data.role!=='admin'&&!(data.duties||[]).includes('executive'))page='home';
     if (['hr','directory'].includes(page) && !['hr','admin'].includes(data.role)) page = 'home';
@@ -69,19 +69,7 @@
     if(!el||!data||(data.role!=='admin'&&!(data.duties||[]).includes('executive')))return;
     try{
       const x=await D.executiveSummary();
-      if(!el.isConnected)return;
-      const e=M.esc;
-      const k=(label,n)=>'<div class="executive-kpi"><span>'+e(label)+'</span><strong>'+e(Number(n||0).toLocaleString('th-TH'))+'</strong></div>';
-      const chart=(label,rows)=>{
-        const list=Array.isArray(rows)?rows:[];
-        const max=Math.max(1,...list.map(r=>Number(r.n)||0));
-        return '<section class="executive-chart"><h3>'+e(label)+'</h3>'+(list.length?list.map(r=>'<div class="executive-row"><div><span>'+e(M.stages[r.label]||r.label)+'</span><b>'+e(r.n)+'</b></div><div class="executive-track"><i style="width:'+Math.max(0,Math.min(100,Number(r.n)/max*100))+'%"></i></div></div>').join(''):'<p>ยังไม่มีข้อมูล</p>')+'</section>';
-      };
-      el.innerHTML='<div class="executive-intro"><b>RMUTI KKC · ภาพรวมงานบริหารบุคคล</b><p>ข้อมูลบัญชีที่ยืนยันแล้ว ไม่ใช่จำนวนอัตรากำลังราชการทั้งหมด · ณ '+e(M.date(x.as_of,true))+'</p></div>'+
-      '<div class="executive-kpis">'+k('บัญชีบุคลากร',x.accounts)+k('คำขอค้างดำเนินการ',x.open_requests)+k('เอกสารรอพิจารณา',x.pending_documents)+k('หนังสือพร้อมรับ / รับแล้ว',x.issued_requests)+k('ชั่วโมงพัฒนาที่ตรวจสอบแล้ว',x.training_hours)+k('เอกสารลงนามภายใน',x.signed_documents)+'</div>'+
-      '<div class="executive-charts">'+chart('แยกตามคณะ / หน่วยงาน',x.faculties)+chart('ประเภทบุคลากร',x.staff_types)+chart('สายงาน',x.tracks)+chart('วุฒิสูงสุดที่ HR ตรวจสอบแล้ว',x.education)+chart('สถานะคำขอ',x.requests)+'</div>'+
-      '<h3>ข้อมูลและงานที่ต้องติดตาม</h3><div class="executive-kpis">'+k('ยังไม่ระบุสังกัด',x.missing_org)+k('ยังไม่ระบุตำแหน่ง',x.missing_position)+k('ประวัติอบรมรอตรวจ',x.training_pending)+k('วุฒิรอตรวจ',x.education_pending)+k('ตำแหน่งรอตรวจ',x.positions_pending)+'</div>'+
-      '<p class="intro">รายงานสรุปเท่านั้น ไม่แสดงชื่อบุคลากร เงินเดือน หรือรายละเอียดเอกสาร</p>'+(data.role==='admin'?'<button type="button" class="btn light" data-action="drive-health">ตรวจสอบการเชื่อมต่อพื้นที่เอกสาร</button>':'');
+      if(el.isConnected)el.innerHTML=V.executiveDashboard(x,data);
     }catch(err){if(el.isConnected)el.textContent=D.message(err);}
   }
   async function refresh() {

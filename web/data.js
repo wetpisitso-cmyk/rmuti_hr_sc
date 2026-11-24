@@ -542,6 +542,15 @@ window.HRData = (() => {
       p_user_id:userId, p_role:role,
     }));
   }
+  async function executiveSummary(){
+    if(demo)throw Error('ใช้บัญชี ADMIN จริง');
+    return ok(await db().rpc('hr_executive_summary'));
+  }
+  async function driveCheck(){
+    const result=await db().functions.invoke('hr-drive-document',{body:{action:'health'}});
+    if(result.error){let msg='ตรวจสอบการเชื่อมต่อไม่สำเร็จ';try{msg=(await result.error.context?.json())?.error||msg}catch{}throw Error(msg)}
+    return result.data;
+  }
   async function saveSalaryDraft(id,fields,content) {
     if(demo)throw Error('กรุณาใช้ระบบจริง');
     return ok(await db().rpc('hr_salary_save_draft',{p_request_id:id,p_fields:fields,p_content:content}));
@@ -593,5 +602,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, saveSalaryDraft, submitSalaryDraft };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, saveSalaryDraft, submitSalaryDraft, executiveSummary, driveCheck };
 })();

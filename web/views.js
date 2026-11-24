@@ -190,7 +190,7 @@ window.HRViews = (() => {
       single('performance', 'performance') +
       single('services', 'globe') +
       (['hr','admin'].includes(d.role) ? single('hr', 'brief') : '') +
-      (d.role === 'admin' ? single('admin', 'shield') : '') +
+      (d.role === 'admin' ? single('executive', 'performance') + single('admin', 'shield') : '') +
       '<div class="nav-caption">ช่วยเหลือและข้อมูล</div>' +
       single('help', 'help') +
       single('privacy', 'shield') +
@@ -801,6 +801,7 @@ window.HRViews = (() => {
       case 'training': return trainingPage(d);
       case 'education': return historyPage(d,'education');
       case 'positions': return historyPage(d,'positions');
+      case 'executive': return d.role==='admin'?panel('ภาพรวมสำหรับผู้บริหาร','<div id="executive-summary" role="status">กำลังโหลดข้อมูลสรุป...</div>') : note('เฉพาะผู้ที่ได้รับอนุญาต');
       case 'directory': return directoryPage(d);
       case 'home':
         return (
@@ -1138,7 +1139,7 @@ window.HRViews = (() => {
           ) +
           '<div id="pdf-field" hidden>' +
           field(
-            'แนบ PDF เมื่อต้องการส่งเอกสารออนไลน์' +
+            (r.kind==='salary'?'แนบ PDF ฉบับตรวจสอบและลงนามแล้ว (จำเป็น)':'แนบ PDF เมื่อต้องการส่งเอกสารออนไลน์') +
               (HRData.demo ? ' (ไม่เกิน 512 KB)' : ' (ไม่เกิน 5 MB)'),
             input('file', 'type="file" accept=".pdf,application/pdf"'),
           ) +

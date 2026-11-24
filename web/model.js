@@ -70,6 +70,7 @@ window.MIS = (() => {
     education: 'ประวัติการศึกษา',
     positions: 'ประวัติการดำรงตำแหน่ง',
     directory: 'ทะเบียนบุคลากร',
+    executive: 'Dashboard ผู้บริหาร',
   };
   const groups = [
     {

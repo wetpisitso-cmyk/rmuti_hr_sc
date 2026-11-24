@@ -162,6 +162,16 @@
       await refresh();
       return;
     }
+    if(kind==='salary-draft'){
+      if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+      const r=data.requests.find(v=>v.id===form.dataset.id);
+      if(!r)throw Error('ไม่พบคำขอ');
+      const x=salaryFormValues(form);
+      await D.saveSalaryDraft(r.id,x,V.salaryContent(x));
+      await refresh();
+      if(data)modal(V.salaryEditor(data,data.requests.find(v=>v.id===r.id)));
+      toast('บันทึกฉบับร่างแล้ว');return;
+    }
     if(kind==='history-submit'){
       if(!data)throw Error('กรุณาเข้าสู่ระบบ');
       if(vals.end_on&&vals.end_on<vals.start_on)throw Error('วันที่สิ้นสุดต้องไม่ก่อนวันเริ่มต้น');
@@ -396,6 +406,14 @@
         ev.target.value,
       );
   });
+  function salaryFormValues(form){
+    const x=Object.fromEntries(new FormData(form));
+    for(const k of Object.keys(x))x[k]=String(x[k]).trim();
+    if(!form.reportValidity())throw Error('กรุณากรอกข้อมูลหนังสือให้ครบ');
+    if(!Number.isFinite(Number(x.salary))||Number(x.salary)<=0)throw Error('กรุณากรอกเงินเดือนจริง');
+    x.signer_name=(data.officers||[]).find(o=>o.id===x.signer_id)?.display_name||'';
+    return x;
+  }
   async function action(name, id) {
     switch (name) {
       case 'menu': {
@@ -487,6 +505,46 @@
         const r=data.workflows.find(x=>x.id===id);
         if (r) modal(HRWorkflow.detail(data,r));
         return;
+      }
+      case 'salary-editor': {
+        if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+        const r=data.requests.find(v=>v.id===id);
+        if(!r||r.kind!=='salary'||!['submitted','review'].includes(r.status))throw Error('คำขอไม่อยู่ในขั้นจัดทำ');
+        modal(V.salaryEditor(data,r));return;
+      }
+      case 'salary-preview': {
+        if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+        const r=data.requests.find(v=>v.id===id);
+        const form=dialog.querySelector('form[data-form="salary-draft"]');
+        if(!r||!form)throw Error('ไม่พบฉบับร่าง');
+        const x=salaryFormValues(form);
+        await D.saveSalaryDraft(id,x,V.salaryContent(x));
+        await refresh();
+        if(data)modal(V.salaryPreview(data,r,x));
+        return;
+      }
+      case 'salary-print':
+        if(!['hr','admin'].includes(data?.role)||!dialog.querySelector('.salary-paper'))throw Error('ไม่พบฉบับร่าง');
+        if(document.fonts)await document.fonts.ready;
+        window.print();return;
+      case 'salary-submit': {
+        if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+        const form=dialog.querySelector('form[data-form="salary-draft"]');
+        if(!form)throw Error('ไม่พบฉบับร่าง');
+        const x=salaryFormValues(form);
+        if(!x.number||!x.signer_position||!x.reviewer_id||!x.approver_id||!x.signer_id)throw Error('กรุณาระบุเลขหนังสือ ตำแหน่งผู้ลงนาม และผู้รับผิดชอบครบ 3 คน');
+        if(new Set([data.id,x.reviewer_id,x.approver_id,x.signer_id]).size!==4)throw Error('ผู้เสนอ ผู้ตรวจสอบ ผู้อนุมัติ และผู้ลงนามต้องต่างบัญชี');
+        if(!window.confirm('ยืนยันเสนอฉบับร่างเพื่อพิจารณา?'))return;
+        await D.saveSalaryDraft(id,x,V.salaryContent(x));
+        await refresh();
+        const saved=data?.salaryDrafts?.find(v=>v.id===id);
+        if(!saved)throw Error('ไม่พบฉบับร่างที่บันทึก');
+        if(saved.content!==V.salaryContent(x))throw Error('ฉบับร่างเปลี่ยนแปลง กรุณาตรวจสอบใหม่');
+        const doc=await D.submitSalaryDraft(id,saved.updated_at,x.reviewer_id,x.approver_id,x.signer_id);
+        await refresh();
+        const row=data?.workflows?.find(v=>v.id===doc);
+        if(row)modal(HRWorkflow.detail(data,row));
+        toast('เสนอเอกสารแล้ว');return;
       }
       case 'request-detail': {
         const r = data.requests.find((x) => x.id === id);

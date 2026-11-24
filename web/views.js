@@ -539,7 +539,7 @@ window.HRViews = (() => {
           ]),
           'ยังไม่มีบันทึกผลงาน',
         );
-    else body = requestTable(d, d.requests, true);
+    else body = salaryDashboard(d);
     return (
       '<div class="staff-tabs">' +
       Object.entries(tabs)
@@ -548,7 +548,7 @@ window.HRViews = (() => {
         )
         .join('') +
       '</div>' +
-      panel(tabs[tab] || tabs.queue, body)
+      panel(tab==='queue'?'จัดการหนังสือรับรอง':tabs[tab] || tabs.queue, body)
     );
   }
   const isHR = d => ['hr','admin'].includes(d.role);
@@ -1024,6 +1024,73 @@ window.HRViews = (() => {
     }
     return profileArea(d, id, body);
   }
+  function salaryFlow(d,r) {return (d.salaryFlows||[]).find(x=>x.request_id===r.id);}
+  function salaryDraft(d,r) {return (d.salaryDrafts||[]).find(x=>x.id===r.id);}
+  function salaryStage(d,r) {
+    if(['ready','done'].includes(r.status))return 'issued';
+    if(r.status==='rejected')return 'rejected';
+    const flow=salaryFlow(d,r);
+    if(flow?.status==='pending_signature')return 'sign';
+    if(flow?.status==='signed')return 'signed';
+    if(flow?.status==='pending_review'||flow?.status==='pending_approval')return 'approval';
+    if(flow?.status==='returned'||flow?.status==='rejected')return 'returned';
+    return r.status==='submitted'?'inbox':'draft';
+  }
+  const salaryLabels={inbox:'รอรับเรื่อง',draft:'กำลังจัดทำเอกสาร',approval:'รอตรวจสอบ / อนุมัติ',sign:'รอลงนาม',signed:'ลงนามภายในแล้ว — รอออกหนังสือ',issued:'พร้อมรับ / รับแล้ว',returned:'ส่งคืน / ไม่อนุมัติเอกสาร',rejected:'ส่งคืนคำขอ'};
+  function salaryDashboard(d){
+    const list=d.requests||[], tally=k=>list.filter(r=>salaryStage(d,r)===k).length;
+    const cards=[['inbox','รอรับเรื่อง','file',tally('inbox')],['draft','กำลังจัดทำเอกสาร','pen',tally('draft')+tally('approval')+tally('returned')],['sign','รอลงนาม','pen',tally('sign')],['issued','ออกหนังสือแล้ว / พร้อมรับ','check',tally('issued')]];
+    const rows=recent(list).map(r=>[
+      '<b class="ref">'+e(num(r))+'</b>',e(M.kinds[r.kind]),e(personOf(d,r.owner_id)),e(M.date(r.created_at)),
+      '<span class="salary-stage salary-'+salaryStage(d,r)+'">'+e(salaryLabels[salaryStage(d,r)])+'</span>',
+      r.kind==='salary'&&['submitted','review'].includes(r.status)?btn('จัดทำหนังสือ','salary-editor',r.id,'primary','file')+' '+btn('รายละเอียด','request-detail',r.id):btn('รายละเอียด','request-detail',r.id)
+    ]);
+    return '<div class="salary-metrics">'+cards.map(([key,label,icon,count])=>'<div class="salary-metric salary-'+key+'">'+ic(icon,24)+'<strong>'+count+'</strong><span>'+e(label)+'</span></div>').join('')+'</div>'+
+    '<p class="intro">ลงนามภายในแล้ว รอเจ้าหน้าที่ออกหนังสือ: '+tally('signed')+' รายการ · คำขอส่งคืน: '+tally('rejected')+' รายการ</p>'+
+    note('เลือก “จัดทำหนังสือ” สำหรับคำขอรับรองเงินเดือน จากนั้นบันทึกร่าง ดูตัวอย่าง A4 และเสนออนุมัติ เอกสารประเภทอื่นยังดำเนินการแบบเดิม')+
+    tableSearch('salary-queue','ค้นหาเลขคำขอ / ชื่อ / ประเภทหนังสือ')+'<div id="salary-queue">'+table(['เลขคำขอ','ประเภทหนังสือ','ผู้ขอ','วันที่ยื่น','สถานะ','ดำเนินการ'],rows,'ยังไม่มีคำขอ')+'</div>';
+  }
+  function salaryEditor(d,r) {
+    const old=salaryDraft(d,r),flow=salaryFlow(d,r),x=old?.fields||{};
+    if(flow&&flow.status!=='rejected'){
+      const visible=(d.workflows||[]).find(v=>v.id===flow.document_id);
+      return '<h2>'+e(num(r))+' — หนังสือรับรองเงินเดือน</h2>'+note('เอกสารถูกเสนอแล้ว: '+(salaryLabels[salaryStage(d,r)]||flow.status))+
+        '<p class="intro">ดำเนินการตรวจสอบ / อนุมัติ / ลงนามที่ระบบเสนอเอกสาร การออกหนังสือฉบับจริงยังต้องตรวจและแนบ PDF ที่ได้รับอนุญาต</p>'+
+        (visible?btn('เปิดเอกสารที่เสนอ','workflow-detail',flow.document_id,'primary','file'):'')+' '+btn('กลับรายละเอียดคำขอ','request-detail',r.id);
+    }
+    const p=d.profiles.find(v=>v.id===r.owner_id),org=d.orgs.find(v=>v.id===p?.org_id);
+    const val=(k,fallback='')=>e(x[k]??fallback);
+    const officers=(d.officers||[]).filter(o=>o.id!==d.id);
+    const choices=(name,title,required=false)=>field(title,'<select name="'+name+'" '+(required?'required':'')+'><option value="">ยังไม่กำหนด</option>'+officers.map(o=>'<option value="'+e(o.id)+'" '+(x[name]===o.id?'selected':'')+'>'+e(o.display_name)+'</option>').join('')+'</select>');
+    return '<header class="salary-editor-head"><div><small>จัดทำหนังสือรับรองเงินเดือน</small><h2>'+e(num(r))+' — '+e(personOf(d,r.owner_id))+'</h2></div>'+badge(r.status)+'</header>'+
+      note('ตรวจสอบข้อมูลกับทะเบียนและเงินเดือนจริงก่อนบันทึก ข้อมูลจากโปรไฟล์เป็นข้อมูลที่บุคลากรกรอกเอง')+
+      '<form data-form="salary-draft" data-id="'+e(r.id)+'"><div class="module-grid">'+
+      field('ชื่อ–นามสกุล',input('person_name','required maxlength="200" value="'+val('person_name',M.person(p))+'"'))+
+      field('ตำแหน่ง',input('position','required maxlength="200" value="'+val('position',p?.position||'')+'"'))+
+      field('ประเภทบุคลากร',input('staff_type','required maxlength="120" value="'+val('staff_type',p?.staff_type||'')+'"'))+
+      field('สังกัด',input('organization','required maxlength="300" value="'+val('organization',[org?.faculty,org?.division,org?.unit].filter(Boolean).join(' / '))+'"'))+
+      field('อัตราเงินเดือน (บาท)',input('salary','type="number" min="0.01" max="9999999" step="0.01" required value="'+val('salary')+'" placeholder="กรอกเงินเดือนจริง"'))+
+      field('เลขที่หนังสือ (เว้นว่างได้ในร่าง)',input('number','maxlength="100" value="'+val('number')+'" placeholder="เลขหนังสือที่ได้รับจัดสรร"'))+
+      field('วันที่ออกหนังสือ (วันที่เสนอในร่าง)',input('issued_on','type="date" required value="'+val('issued_on',thaiToday())+'"'))+
+      field('วัตถุประสงค์',input('purpose','required maxlength="600" value="'+val('purpose',r.purpose)+'"'))+
+      choices('signer_id','ผู้มีอำนาจลงนาม')+
+      field('ตำแหน่งผู้ลงนาม',input('signer_position','maxlength="200" value="'+val('signer_position')+'"'))+
+      choices('reviewer_id','ผู้ตรวจสอบ')+choices('approver_id','ผู้อนุมัติ')+
+      '</div><div class="salary-actions"><button type="submit" class="btn primary">'+ic('save',18)+' สร้าง / บันทึกหนังสือรับรอง</button>'+
+      btn('ดูตัวอย่าง A4','salary-preview',r.id,'light','file')+
+      btn('เสนออนุมัติและลงนาม','salary-submit',r.id,'salary-orange','pen')+'</div></form>'+
+      '<div class="intro">'+(old?'บันทึกร่างล่าสุด '+e(M.date(old.updated_at,true)):'ยังไม่ได้บันทึกฉบับร่าง')+'</div>'+
+      '<p class="intro">สร้างร่างได้แม้ยังไม่มีผู้รับผิดชอบครบ การเสนอจริงต้องมีผู้ตรวจสอบ ผู้อนุมัติ ผู้ลงนาม 3 บัญชีแยกจากผู้เสนอ และระบุเลขหนังสือ</p>'+
+      btn('กลับรายละเอียดคำขอ','request-detail',r.id);
+  }
+  function salaryContent(x){
+    return ['ที่ '+(x.number||'................................'),'วันที่ '+M.date(x.issued_on),'หนังสือรับรองเงินเดือน',
+    'หนังสือฉบับนี้ให้ไว้เพื่อรับรองว่า '+x.person_name+' เป็น'+x.staff_type+' ของมหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน วิทยาเขตขอนแก่น ดำรงตำแหน่ง '+x.position+' สังกัด '+x.organization+' ได้รับอัตราเงินเดือน '+Number(x.salary).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2})+' บาทต่อเดือน',
+    'ออกให้เพื่อ '+x.purpose,'ลงชื่อ ................................................','('+ (x.signer_name||'ยังไม่กำหนดผู้ลงนาม') +')',x.signer_position||'ตำแหน่งผู้มีอำนาจลงนาม'].join('\n\n');
+  }
+  function salaryPreview(d,r,x){
+    return '<section class="salary-paper"><div class="salary-draft-mark">ฉบับร่าง — ยังไม่ใช่หนังสือรับรองที่ออกแล้ว</div><div class="salary-letterhead">มหาวิทยาลัยเทคโนโลยีราชมงคลอีสาน<br>วิทยาเขตขอนแก่น</div><h2>หนังสือรับรองเงินเดือน</h2><div class="salary-lettertext">'+e(salaryContent(x))+'</div><p class="salary-paper-foot">เอกสารร่าง '+e(num(r))+' • ไม่มีลายเซ็น • แบบรอตรวจสอบ</p></section><div class="toolbar no-print">'+btn('พิมพ์ร่าง / บันทึก PDF','salary-print',r.id,'primary','print')+' '+btn('กลับไปแก้ไข','salary-editor',r.id,'light')+'</div>';
+  }
   function requestDetail(d, r) {
     const can = ['hr','admin'].includes(d.role) && M.transitions[r.status].length;
     return (
@@ -1047,6 +1114,7 @@ window.HRViews = (() => {
         .join('') +
       '</dl><div class="toolbar no-print">' +
       btn('พิมพ์ใบรับคำขอ', 'print', '', 'light', 'print') +
+      (['hr','admin'].includes(d.role)&&r.kind==='salary'&&['submitted','review'].includes(r.status)?btn('จัดทำหนังสือรับรอง','salary-editor',r.id,'primary','file'):'') +
       (r.document_path && ['ready', 'done'].includes(r.status)
         ? btn('ดาวน์โหลด PDF', 'download', r.id, 'light', 'download')
         : '') +
@@ -1152,6 +1220,7 @@ window.HRViews = (() => {
     orgOptions,
     orderTable,
     requestDetail,
+    salaryEditor,salaryContent,salaryPreview,
     login,
     num,
   };

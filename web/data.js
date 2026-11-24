@@ -143,6 +143,7 @@ window.HRData = (() => {
           db().rpc('hr_admin_list_pending_email_roles').then(ok),
         ])
       : [[],[],[]];
+    const salaryInfo=['hr','admin'].includes(membership.role)?await Promise.all([rows('salary_drafts'),db().rpc('hr_salary_workflow_status').then(ok)]):[[],[]];
     const [
       profiles,
       orgs,
@@ -189,6 +190,7 @@ window.HRData = (() => {
     return {
       id,
       role: membership.role,
+      salaryDrafts:salaryInfo[0],salaryFlows:salaryInfo[1],
       adminUsers: adminInfo[0],
       roleAudit: adminInfo[1],
       pendingEmailRoles: adminInfo[2],
@@ -540,6 +542,14 @@ window.HRData = (() => {
       p_user_id:userId, p_role:role,
     }));
   }
+  async function saveSalaryDraft(id,fields,content) {
+    if(demo)throw Error('กรุณาใช้ระบบจริง');
+    return ok(await db().rpc('hr_salary_save_draft',{p_request_id:id,p_fields:fields,p_content:content}));
+  }
+  async function submitSalaryDraft(id,updated,reviewer,approver,signer) {
+    if(demo)throw Error('กรุณาใช้ระบบจริง');
+    return ok(await db().rpc('hr_salary_submit_draft',{p_request_id:id,p_expected_updated_at:updated,p_reviewer:reviewer,p_approver:approver,p_signer:signer}));
+  }
   async function proposeDocument(p) {
     if (demo) throw Error('ระบบเสนอเอกสารต้องใช้บัญชี Supabase จริง');
     return ok(await db().rpc('hr_propose_document', {
@@ -583,5 +593,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, saveSalaryDraft, submitSalaryDraft };
 })();

@@ -47,7 +47,7 @@ window.HRWorkflow=(()=>{
    '<label class="field"><span>รายละเอียดฉบับแก้ไข</span><textarea name="content" rows="7" maxlength="16000" required>'+esc(r.content)+'</textarea></label>'+
    '<label class="field"><span>คำชี้แจง</span><textarea name="note" maxlength="1500"></textarea></label><div class="actions"><button type="submit" class="btn primary">ส่งตรวจสอบใหม่</button></div></form>':'';
   const items=[['ผู้เสนอ',officer(d,r.requester_id)],['ผู้ตรวจสอบ',officer(d,r.reviewer_id)],['ผู้อนุมัติ',officer(d,r.approver_id)],['ผู้ลงนาม',officer(d,r.signer_id)],['วันที่เสนอ',dt(r.created_at)]];
-  return '<section class="workflow-document"><p class="intro">ระบบเอกสาร มทร.อีสาน วิทยาเขตขอนแก่น</p><h2>'+esc(r.title)+'</h2>'+status(r.status)+
+  return '<section class="workflow-document'+(r.certificate_request_id?' salary-workflow':'')+'"><p class="intro">ระบบเอกสาร มทร.อีสาน วิทยาเขตขอนแก่น</p><h2>'+esc(r.title)+'</h2>'+status(r.status)+
    '<dl>'+items.map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>').join('')+'</dl>'+
    '<h3>เนื้อหาเอกสาร</h3><div class="workflow-body">'+esc(r.content)+'</div>'+
    (signature&&r.status==='signed'?'<div class="workflow-signed">ลงชื่อ'+signatureSVG(signature.signature_strokes)+'<p>('+esc(officer(d,signature.actor_id))+')</p><p>ลงนาม '+esc(dt(signature.created_at))+'</p></div>':'')+

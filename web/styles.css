@@ -1602,3 +1602,33 @@ dialog{border-color:#cbdcf0}
 .training-state.returned{background:#ffeded;color:#a12f30}
 tr[hidden]{display:none!important}
 @media(max-width:650px){.module-grid{grid-template-columns:1fr}.module-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Salary certificate workbench — system UI remains Noto Sans Thai. */
+@font-face{font-family:"TH Sarabun New";src:local("TH Sarabun New"),local("THSarabunNew");font-weight:400;font-display:swap}
+@font-face{font-family:"TH Sarabun New";src:local("TH Sarabun New Bold"),local("THSarabunNew Bold");font-weight:700;font-display:swap}
+.salary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.salary-metric{display:flex;flex-direction:column;align-items:flex-start;gap:8px;background:white;border:1px solid #dce6f4;border-radius:14px;padding:18px;color:#1759bc}
+.salary-metric strong{font-size:30px;line-height:1.15}
+.salary-metric span{color:#173a63;font-size:13px;font-weight:650}
+.salary-metric.salary-draft{color:#f48120}.salary-metric.salary-sign{color:#a46015}.salary-metric.salary-issued{color:#14804a}
+.salary-stage{display:inline-flex;border-radius:99px;padding:5px 10px;font-size:12px;background:#edf4ff;color:#174a98;font-weight:700}
+.salary-stage.salary-draft,.salary-stage.salary-approval,.salary-stage.salary-sign{background:#fff1df;color:#925504}
+.salary-stage.salary-issued,.salary-stage.salary-signed{background:#e6f7ee;color:#176c41}
+.salary-stage.salary-rejected,.salary-stage.salary-returned{background:#ffeded;color:#a12f30}
+.salary-editor-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.salary-editor-head h2{margin:4px 0}
+.salary-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+.salary-actions button[type=submit]{grid-column:1/-1;min-height:46px}
+.btn.salary-orange{background:#f48120;color:white;border-color:#f48120}
+.btn.salary-orange:hover{background:#d86a0e}
+.salary-paper,.salary-workflow{font-family:"TH Sarabun New","Sarabun","Noto Sans Thai",sans-serif!important;font-size:16pt;color:#111;background:#fff}
+.salary-paper{padding:22mm 16mm;box-sizing:border-box;border:1px solid #d9e1eb;min-height:250mm;line-height:1.5}
+.salary-paper h2{font:700 20pt/1.4 "TH Sarabun New","Sarabun","Noto Sans Thai",sans-serif;text-align:center;color:#111;margin:15mm 0 8mm}
+.salary-letterhead{text-align:center;font-weight:700}
+.salary-lettertext{white-space:pre-wrap;overflow-wrap:anywhere}
+.salary-draft-mark{color:#a63c30;border:1px solid #a63c30;text-align:center;font-weight:700;padding:3mm;margin-bottom:8mm}
+.salary-paper-foot{font-size:12pt;margin-top:15mm;color:#666}
+.salary-workflow .workflow-body{font-family:inherit;font-size:16pt;line-height:1.5;color:#111}
+@media(min-width:1050px){.salary-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:550px){.salary-paper{padding:10mm 6mm;min-height:0}.salary-actions{grid-template-columns:1fr}.salary-metric{padding:12px}}
+@media print{.salary-paper{padding:0;border:0;min-height:0;width:100%;box-shadow:none}.salary-paper,.salary-workflow{font-size:16pt!important}.salary-paper h2{font-size:20pt!important}.salary-draft-mark{color:#a63c30!important}.salary-paper-foot{font-size:12pt}}

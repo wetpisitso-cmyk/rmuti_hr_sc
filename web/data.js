@@ -78,10 +78,9 @@ window.HRData = (() => {
     for (;;) {
       const offset = result.length;
       const page = ok(
-        await db()
-          .from('hr_' + table)
-          .select('*')
-          .order('id')
+        await (table === 'member_duties'
+          ? db().from('hr_' + table).select('*').order('member_id').order('duty')
+          : db().from('hr_' + table).select('*').order('id'))
           .range(offset, offset + 199),
       );
       if (!page.length) return result;

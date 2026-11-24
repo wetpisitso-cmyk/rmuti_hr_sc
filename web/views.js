@@ -184,6 +184,8 @@ window.HRViews = (() => {
       M.groups.slice(1).map(group).join('') +
       single('workflow', 'file') +
       single('training', 'calendar') +
+      single('education', 'help') +
+      single('positions', 'brief') +
       (['hr','admin'].includes(d.role) ? single('directory', 'user') : '') +
       single('performance', 'performance') +
       single('services', 'globe') +
@@ -557,6 +559,40 @@ window.HRViews = (() => {
     return '<div class="module-search">'+ic('search',18)+
       '<input type="search" data-table-search="'+e(target)+'" aria-label="'+e(placeholder)+'" placeholder="'+e(placeholder)+'"></div>';
   }
+  function historyPage(d,kind) {
+    const edu=kind==='education', records=(edu?d.educationRecords:d.positionRecords)||[];
+    const mine=records.filter(r=>r.owner_id===d.id);
+    const name=edu?'ประวัติการศึกษา':'ประวัติการดำรงตำแหน่ง';
+    const today=thaiToday();
+    const levels=['มัธยมศึกษา','ปวช.','ปวส.','อนุปริญญา','ปริญญาตรี','ปริญญาโท','ปริญญาเอก','อื่น ๆ'];
+    const types=['บรรจุ/แต่งตั้ง','เลื่อนตำแหน่ง','ย้าย/โอน','เปลี่ยนสายงาน','รักษาการ','อื่น ๆ'];
+    const fields=edu?
+      field('ระดับการศึกษา',select('level',levels.map(x=>opt(x,x)).join(''),'required'))+
+      field('วุฒิ / ชื่อปริญญา',input('qualification','required minlength="2" maxlength="200"'))+
+      field('สาขาวิชา',input('major','maxlength="200"'))+
+      field('สถานศึกษา',input('institution','required minlength="2" maxlength="200"'))+
+      field('ปีที่สำเร็จการศึกษา (พ.ศ.)',input('graduation_year','type="number" min="2400" max="'+(Number(today.slice(0,4))+543)+'" required'))
+      :field('ชื่อตำแหน่ง',input('position_title','required minlength="2" maxlength="200"'))+
+      field('สังกัด / หน่วยงาน',input('organization','required minlength="2" maxlength="250"'))+
+      field('ประเภทการแต่งตั้ง',select('appointment_kind',types.map(x=>opt(x,x)).join(''),'required'))+
+      field('วันที่เริ่มดำรงตำแหน่ง',input('start_on','type="date" min="1900-01-01" max="'+today+'" required'))+
+      field('วันที่สิ้นสุด (เว้นว่างหากยังดำรงอยู่)',input('end_on','type="date" min="1900-01-01" max="'+today+'"'))+
+      field('เลขที่คำสั่งแต่งตั้ง',input('order_ref','maxlength="200"'));
+    const head=edu?['ระดับ / วุฒิ','สาขา','สถานศึกษา','ปี พ.ศ.']:['ตำแหน่ง / ประเภท','หน่วยงาน','ช่วงเวลาดำรงตำแหน่ง','เลขคำสั่ง'];
+    const rows=(list,staff)=>list.slice().sort((a,b)=>edu?b.graduation_year-a.graduation_year:String(b.start_on).localeCompare(String(a.start_on))).map(r=>[
+      ...(staff?[e(personOf(d,r.owner_id))]:[]),
+      ...(edu?['<b>'+e(r.level)+'</b><div class="intro">'+e(r.qualification)+'</div>',e(r.major||'—'),e(r.institution),e(r.graduation_year)]
+        :['<b>'+e(r.position_title)+'</b><div class="intro">'+e(r.appointment_kind)+'</div>',e(r.organization),e(M.date(r.start_on))+' – '+e(r.end_on?M.date(r.end_on):'ยังดำรงอยู่'),e(r.order_ref||'—')]),
+      '<span class="training-state '+e(r.status)+'">'+e(trainingStates[r.status])+'</span>',
+      e(r.note||'—')+(r.review_note?'<div class="intro">HR: '+e(r.review_note)+'</div>':'')+(r.reviewed_at?'<div class="intro">ตรวจเมื่อ '+e(M.date(r.reviewed_at,true))+'</div>':''),
+      staff&&r.status==='submitted'&&r.owner_id!==d.id?btn('ตรวจสอบ','history-review',kind+':'+r.id,'primary','check'):
+      !staff&&r.status==='submitted'?btn('ถอนรายการ','history-withdraw',kind+':'+r.id,'light','close'):'—'
+    ]);
+    return panel('สรุป'+name,'<div class="module-metrics">'+metric('รายการทั้งหมด',mine.length)+metric('รอตรวจสอบ',mine.filter(r=>r.status==='submitted').length)+metric('ตรวจสอบแล้ว',mine.filter(r=>r.status==='reviewed').length)+'</div>'+note('ข้อมูลแจ้งด้วยตนเอง ไม่เปลี่ยนทะเบียนตำแหน่งหรือวุฒิทางราชการโดยอัตโนมัติ'))+
+    panel('เพิ่ม'+name,'<form data-form="history-submit" data-kind="'+kind+'"><div class="module-grid">'+fields+'</div>'+field('หมายเหตุ / เลขอ้างอิงหลักฐาน','<textarea name="note" rows="3" maxlength="1000"></textarea>')+saveButton('ส่งให้ HR ตรวจสอบ')+'</form>')+
+    panel(name+'ของท่าน',table([...head,'สถานะ','หมายเหตุ','ดำเนินการ'],rows(mine,false),'ยังไม่มีประวัติ'))+
+    (isHR(d)?panel('คิวตรวจสอบ'+name,tableSearch(kind+'-queue','ค้นหาชื่อ / รายละเอียด / สถานะ')+'<div id="'+kind+'-queue">'+table(['บุคลากร',...head,'สถานะ','หมายเหตุ','ดำเนินการ'],rows(records,true),'ยังไม่มีรายการ')+'</div>'):'');
+  }
   function trainingPage(d) {
     const records=(d.trainingRecords||[]);
     const mine=records.filter(r=>r.owner_id===d.id);
@@ -763,6 +799,8 @@ window.HRViews = (() => {
     switch (id) {
       case 'tasks': return taskPage(d);
       case 'training': return trainingPage(d);
+      case 'education': return historyPage(d,'education');
+      case 'positions': return historyPage(d,'positions');
       case 'directory': return directoryPage(d);
       case 'home':
         return (

@@ -162,6 +162,18 @@
       await refresh();
       return;
     }
+    if(kind==='history-submit'){
+      if(!data)throw Error('กรุณาเข้าสู่ระบบ');
+      if(vals.end_on&&vals.end_on<vals.start_on)throw Error('วันที่สิ้นสุดต้องไม่ก่อนวันเริ่มต้น');
+      await D.submitHistory(form.dataset.kind,vals);
+      await refresh();toast('ส่งประวัติให้ HR ตรวจสอบแล้ว');return;
+    }
+    if(kind==='history-review'){
+      if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+      if(vals.status==='returned'&&(vals.review_note||'').length<5)throw Error('กรุณาระบุเหตุผลอย่างน้อย 5 ตัวอักษร');
+      await D.reviewHistory(form.dataset.kind,form.dataset.id,vals.status,vals.review_note);
+      await refresh();toast('บันทึกผลตรวจสอบแล้ว');return;
+    }
     if (kind === 'training-submit') {
       if(!data) throw Error('กรุณาเข้าสู่ระบบ');
       await D.submitTraining(vals);
@@ -531,6 +543,23 @@
         await D.cancelPendingEmailRole(email);
         await refresh();
         toast('ยกเลิกรายการรอสิทธิ์แล้ว');
+        return;
+      }
+      case 'history-review':
+      case 'history-withdraw': {
+        const [kind,key]=String(id).split(':');
+        if(!['education','positions'].includes(kind))throw Error('ประเภทไม่ถูกต้อง');
+        const r=((kind==='education'?data.educationRecords:data.positionRecords)||[]).find(x=>x.id===key);
+        if(!r||r.status!=='submitted')throw Error('ไม่พบรายการรอตรวจสอบ');
+        if(name==='history-withdraw'){
+          if(r.owner_id!==data.id)throw Error('ไม่มีสิทธิ์');
+          if(!window.confirm('ยืนยันถอนรายการ?'))return;
+          await D.withdrawHistory(kind,key);await refresh();toast('ถอนรายการแล้ว');return;
+        }
+        if(!['hr','admin'].includes(data.role)||r.owner_id===data.id)throw Error('ไม่มีสิทธิ์ตรวจสอบ');
+        const info=kind==='education'?[r.level,r.qualification,r.major,r.institution,r.graduation_year]:[r.position_title,r.organization,r.appointment_kind,M.date(r.start_on),r.end_on?M.date(r.end_on):'ยังดำรงอยู่',r.order_ref];
+        modal('<h2>ตรวจสอบประวัติบุคลากร</h2><p>'+M.esc(M.person(data.profiles.find(x=>x.id===r.owner_id)))+'</p><p>'+info.map(x=>M.esc(x)).join(' · ')+'</p><p>'+M.esc(r.note||'ไม่มีหมายเหตุ')+'</p>'+
+        '<form data-form="history-review" data-kind="'+kind+'" data-id="'+M.esc(key)+'"><label class="field"><span>ผลตรวจสอบ</span><select name="status"><option value="reviewed">ตรวจสอบแล้ว</option><option value="returned">ส่งคืนแก้ไข</option></select></label><label class="field"><span>หมายเหตุ</span><textarea name="review_note" maxlength="1000" rows="3"></textarea></label><div class="actions"><button class="btn primary" type="submit">บันทึกผล</button></div></form>');
         return;
       }
       case 'training-review': {

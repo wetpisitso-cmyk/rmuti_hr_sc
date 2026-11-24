@@ -119,7 +119,7 @@ window.HRData = (() => {
         registrations: s.registrations.filter((r) => r.owner_id === id || any),
         assessments: s.assessments.filter((r) => r.owner_id === id || any),
         workflows: [], workflowEvents: [], officers: [],
-        adminUsers: [], roleAudit: [], trainingRecords: [],
+        adminUsers: [], roleAudit: [], trainingRecords: [], educationRecords: [], positionRecords: [],
       };
     }
     const session = ok(await db().auth.getSession()).session;
@@ -157,7 +157,7 @@ window.HRData = (() => {
       workflows,
       workflowEvents,
       officers,
-      trainingRecords,
+      trainingRecords, educationRecords, positionRecords,
     ] = await Promise.all([
       rows('profiles'),
       rows('orgs'),
@@ -178,6 +178,8 @@ window.HRData = (() => {
       rows('document_events'),
       db().rpc('hr_workflow_officers').then(ok),
       rows('training_records'),
+      rows('education_records'),
+      rows('position_records'),
     ]);
     const profile = profiles.find((p) => p.id === id);
     if (!profile)
@@ -201,7 +203,7 @@ window.HRData = (() => {
       activities,
       registrations,
       assessments,
-      workflows, workflowEvents, officers, trainingRecords,
+      workflows, workflowEvents, officers, trainingRecords, educationRecords, positionRecords,
     };
   }
   async function login(email, password) {
@@ -474,6 +476,28 @@ window.HRData = (() => {
       }
     }
   }
+  function historyTable(kind) {
+    if(demo) throw Error('ใช้งานได้เฉพาะระบบจริง');
+    if(!['education','positions'].includes(kind)) throw Error('ประเภทไม่ถูกต้อง');
+    return db().from(kind==='education'?'hr_education_records':'hr_position_records');
+  }
+  async function submitHistory(kind,p) {
+    const payload=kind==='education'
+      ? {level:p.level,qualification:p.qualification,major:p.major||'',institution:p.institution,graduation_year:Number(p.graduation_year),note:p.note||''}
+      : {position_title:p.position_title,organization:p.organization,appointment_kind:p.appointment_kind,start_on:p.start_on,end_on:p.end_on||null,order_ref:p.order_ref||'',note:p.note||''};
+    return ok(await historyTable(kind).insert(payload).select('id').single());
+  }
+  async function reviewHistory(kind,id,status,note) {
+    if(!['reviewed','returned'].includes(status))throw Error('สถานะไม่ถูกต้อง');
+    const r=ok(await historyTable(kind).update({status,review_note:note||''}).eq('id',id).eq('status','submitted').select('id').maybeSingle());
+    if(!r)throw Error('ไม่มีสิทธิ์หรือสถานะเปลี่ยนแล้ว');
+    return r;
+  }
+  async function withdrawHistory(kind,id) {
+    const r=ok(await historyTable(kind).delete().eq('id',id).eq('status','submitted').select('id').maybeSingle());
+    if(!r)throw Error('ถอนรายการไม่ได้');
+    return r;
+  }
   async function submitTraining(p) {
     if (demo) throw Error('การบันทึกประวัติอบรมทำได้ในระบบจริง');
     return ok(await db().from('hr_training_records').insert({
@@ -559,5 +583,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory };
 })();

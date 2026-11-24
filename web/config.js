@@ -13,7 +13,7 @@ window.HR_CONFIG = {
   publishableKey: 'sb_publishable_eyfR4UHI6feTmnzNHfaTwQ_0rmLxneR',
   performancePortalUrl: '',
   staffPortalUrl: '',
-  privacyUrl: '',
+  privacyUrl: 'https://rmuti.ac.th/one/privacy-policy-2/',
   termsUrl: '',
   contactText: 'แผนกงานบริหารงานบุคคล มทร.อีสาน วิทยาเขตขอนแก่น',
 };

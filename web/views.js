@@ -178,10 +178,13 @@ window.HRViews = (() => {
     return (
       '<aside class="sidebar" id="sidebar"><a class="brand" href="#home" aria-label="หน้าหลัก ระบบบุคลากร ขอนแก่น"><span class="brandmark" aria-hidden="true">hr</span><div><strong>RMUTI <em>KKC</em></strong><small>แผนกงานบริหารงานบุคคล</small></div></a><nav aria-label="เมนูหลัก">' +
       single('home', 'home') +
+      single('tasks', 'clock') +
       group(M.groups[0], 0) +
       '<div class="nav-caption">บริการระบบสารสนเทศ</div>' +
       M.groups.slice(1).map(group).join('') +
       single('workflow', 'file') +
+      single('training', 'calendar') +
+      (['hr','admin'].includes(d.role) ? single('directory', 'user') : '') +
       single('performance', 'performance') +
       single('services', 'globe') +
       (['hr','admin'].includes(d.role) ? single('hr', 'brief') : '') +
@@ -546,6 +549,101 @@ window.HRViews = (() => {
       panel(tabs[tab] || tabs.queue, body)
     );
   }
+  const isHR = d => ['hr','admin'].includes(d.role);
+  const trainingStates = {submitted:'รอตรวจสอบ',reviewed:'ตรวจสอบแล้ว',returned:'ส่งคืนแก้ไข'};
+  const trainingKinds = ['อบรม','สัมมนา','ประชุมวิชาการ','ศึกษาดูงาน','หลักสูตรออนไลน์','อื่น ๆ'];
+  const thaiToday = () => new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  function tableSearch(target,placeholder) {
+    return '<div class="module-search">'+ic('search',18)+
+      '<input type="search" data-table-search="'+e(target)+'" aria-label="'+e(placeholder)+'" placeholder="'+e(placeholder)+'"></div>';
+  }
+  function trainingPage(d) {
+    const records=(d.trainingRecords||[]);
+    const mine=records.filter(r=>r.owner_id===d.id);
+    const approved=mine.filter(r=>r.status==='reviewed');
+    const rows=(items,staff=false)=>recent(items).map(r=>[
+      ...(staff?[e(personOf(d,r.owner_id))]:[]),
+      '<b>'+e(r.title)+'</b><div class="intro">'+e(r.kind)+' · '+e(r.organizer)+'</div>',
+      e(M.date(r.completed_on)),e(Number(r.hours).toLocaleString('th-TH')),
+      '<span class="training-state '+e(r.status)+'">'+e(trainingStates[r.status])+'</span>',
+      e(r.review_note||r.note||'—'),
+      staff && r.status==='submitted' && r.owner_id!==d.id
+        ?btn('ตรวจสอบ','training-review',r.id,'primary','check')
+        :(!staff&&r.status==='submitted'?btn('ถอนรายการ','training-withdraw',r.id,'light','close'):'—')
+    ]);
+    return panel('สรุปประวัติของท่าน',
+      '<div class="module-metrics">'+metric('จำนวนรายการ',mine.length)+
+      metric('รอตรวจสอบ',mine.filter(r=>r.status==='submitted').length)+
+      metric('ชั่วโมงที่ HR ตรวจสอบแล้ว',approved.reduce((n,r)=>n+Number(r.hours),0).toLocaleString('th-TH'))+'</div>'+
+      note('การตรวจสอบประวัติเป็นการบันทึกข้อมูลภายในระบบ ไม่ใช่การรับรองหลักสูตรหรือสิทธิ์เบิกค่าใช้จ่าย')
+    )+panel('เพิ่มประวัติการอบรม / พัฒนา',
+      '<form data-form="training-submit">'+
+      '<div class="module-grid">'+
+      field('ชื่อหลักสูตร / กิจกรรม',input('title','required minlength="3" maxlength="200"'))+
+      field('หน่วยงานผู้จัด',input('organizer','required minlength="2" maxlength="200"'))+
+      field('ประเภท',select('kind',trainingKinds.map(k=>opt(k,k)).join(''),'required'))+
+      field('วันที่เสร็จสิ้น',input('completed_on','type="date" min="1900-01-01" max="'+thaiToday()+'" required'))+
+      field('จำนวนชั่วโมง',input('hours','type="number" min="0.5" max="1000" step="0.01" required'))+
+      '</div>'+field('หมายเหตุ / เลขที่หลักฐาน (ถ้ามี)','<textarea name="note" rows="3" maxlength="1000"></textarea>')+
+      saveButton('ส่งประวัติให้ HR ตรวจสอบ')+'</form>'
+    )+panel('ประวัติของท่าน',
+      '<div id="training-mine">'+table(['กิจกรรม','วันที่','ชั่วโมง','สถานะ','หมายเหตุ','ดำเนินการ'],rows(mine),'ยังไม่มีประวัติ')+'</div>'
+    )+(isHR(d)?panel('คิวตรวจสอบประวัติบุคลากร',
+      tableSearch('training-queue','ค้นหาบุคลากร / หลักสูตร / สถานะ')+
+      '<div id="training-queue">'+table(['บุคลากร','กิจกรรม','วันที่','ชั่วโมง','สถานะ','หมายเหตุ','ดำเนินการ'],rows(records,true),'ยังไม่มีรายการ')+'</div>'
+    ):'');
+  }
+  function metric(label,value,href='') {
+    return '<div class="module-metric"><small>'+e(label)+'</small><strong>'+e(value)+'</strong>'+
+      (href?link(href,'เปิดรายการ'):'')+'</div>';
+  }
+  function directoryPage(d) {
+    if(!isHR(d)) return note('เฉพาะ HR และ ADMIN');
+    const rows=(d.profiles||[]).slice().sort((a,b)=>M.person(a).localeCompare(M.person(b),'th')).map(p=>{
+      const o=orgOf(d,p);
+      return [e(M.person(p)),e(p.position||'—'),e(p.staff_type||'—'),e(p.track||'—'),e(o?.faculty||'—'),e(o?.unit||'—')];
+    });
+    return panel('ทะเบียนบัญชีบุคลากรในระบบ',
+      '<div class="module-metrics">'+metric('จำนวนบัญชีที่มีระเบียน',rows.length)+
+      metric('ยังไม่ระบุสังกัด',(d.profiles||[]).filter(p=>!p.org_id).length)+
+      metric('ยังไม่ระบุตำแหน่ง',(d.profiles||[]).filter(p=>!p.position).length)+'</div>'+
+      note('ข้อมูลตามระเบียนที่บุคลากรกรอก ไม่ใช่ทะเบียนอัตรากำลังหรือข้อมูลการจ้างที่ HR รับรอง')+
+      '<div class="module-toolbar">'+tableSearch('personnel-directory','ค้นหาชื่อ ตำแหน่ง ประเภท หรือสังกัด')+
+      btn('ส่งออก CSV (Excel)','export-directory','','primary','download')+'</div>'+
+      '<div id="personnel-directory">'+table(['ชื่อ–นามสกุล','ตำแหน่ง','ประเภทบุคลากร','สายงาน','คณะ / หน่วยงาน','แผนก'],rows,'ยังไม่มีระเบียน')+'</div>'
+    );
+  }
+  function taskPage(d) {
+    const requests=(d.requests||[]), workflows=(d.workflows||[]), training=(d.trainingRecords||[]);
+    const assigned=workflows.filter(r=>
+      (r.status==='pending_review'&&r.reviewer_id===d.id)||
+      (r.status==='pending_approval'&&r.approver_id===d.id)||
+      (r.status==='pending_signature'&&r.signer_id===d.id));
+    const ready=requests.filter(r=>r.owner_id===d.id&&r.status==='ready');
+    const returned=workflows.filter(r=>r.requester_id===d.id&&r.status==='returned');
+    const ownTraining=training.filter(r=>r.owner_id===d.id&&r.status==='returned');
+    const pending=requests.filter(r=>['submitted','review'].includes(r.status));
+    const pendingTraining=training.filter(r=>r.status==='submitted'&&r.owner_id!==d.id);
+    const items=[
+      ...assigned.map(r=>['เอกสารมอบหมาย',e(r.title),btn('รายละเอียด','workflow-detail',r.id,'primary')]),
+      ...returned.map(r=>['เอกสารส่งคืน',e(r.title),btn('แก้ไข','workflow-detail',r.id,'primary')]),
+      ...ready.map(r=>['หนังสือพร้อมรับ',e(num(r)+' · '+(M.kinds[r.kind]||r.kind)),btn('รายละเอียด','request-detail',r.id,'primary')]),
+      ...ownTraining.map(r=>['ประวัติอบรมส่งคืน',e(r.title),link('training','ดูประวัติ')])
+    ];
+    return panel('งานที่ต้องดำเนินการ',
+      '<div class="module-metrics">'+metric('เอกสารที่รอท่าน',assigned.length,'workflow')+
+      metric('เอกสารส่งคืน',returned.length,'workflow')+
+      metric('หนังสือพร้อมรับ',ready.length,'requests')+
+      metric('ประวัติอบรมส่งคืน',ownTraining.length,'training')+'</div>'+
+      table(['ประเภท','รายการ','ดำเนินการ'],items,'ไม่มีงานที่ต้องดำเนินการ')+
+      '<p class="intro">สรุปจากข้อมูลล่าสุดเมื่อเข้าสู่ระบบหรือกดรีเฟรช ไม่ใช่การแจ้งเตือนแบบ Push</p>'
+    )+(isHR(d)?panel('ภาพรวมงานเจ้าหน้าที่ HR',
+      '<div class="module-metrics">'+metric('ระเบียนบุคลากร',(d.profiles||[]).length,'directory')+
+      metric('คำขอที่ยังดำเนินการ',pending.length,'hr')+
+      metric('ประวัติอบรมรอตรวจ',pendingTraining.length,'training')+'</div>'+
+      requestTable(d,pending.slice(0,20),true)
+    ):'');
+  }
   function adminUsers(d) {
     const roles = {admin:'ADMIN — ผู้ดูแลระบบ',hr:'HR — เจ้าหน้าที่บุคคล',staff:'USER — บุคลากร'};
     const people = (d.adminUsers||[]).map(u => {
@@ -590,7 +688,8 @@ window.HRViews = (() => {
     )+
     panel('จัดการบัญชีและกำหนดสิทธิ์',
       '<p class="intro">ADMIN เข้าถึงงาน HR ได้ด้วย ไม่สามารถเปลี่ยนสิทธิ์บัญชีของตนเอง และระบบป้องกันการลบ ADMIN คนสุดท้าย</p>'+
-      table(['บุคลากร','สิทธิ์ปัจจุบัน','กำหนดสิทธิ์ใหม่','ดำเนินการ'],people,'ยังไม่มีบัญชีบุคลากร')
+      tableSearch('admin-account-table','ค้นหาชื่อ อีเมล หรือสิทธิ์')+
+      '<div id="admin-account-table">'+table(['บุคลากร','สิทธิ์ปัจจุบัน','กำหนดสิทธิ์ใหม่','ดำเนินการ'],people,'ยังไม่มีบัญชีบุคลากร')+'</div>'
     )+
     panel('ประวัติการเปลี่ยนสิทธิ์',
       table(['วันเวลา','ผู้เปลี่ยน','บัญชีที่เปลี่ยน','การเปลี่ยนแปลง'],audit,'ยังไม่มีประวัติการเปลี่ยนสิทธิ์')
@@ -662,6 +761,9 @@ window.HRViews = (() => {
     const mine = (list) => list.filter((r) => r.owner_id === d.id);
     let body = '';
     switch (id) {
+      case 'tasks': return taskPage(d);
+      case 'training': return trainingPage(d);
+      case 'directory': return directoryPage(d);
       case 'home':
         return (
           profileBanner(d) +
@@ -674,6 +776,9 @@ window.HRViews = (() => {
                 ['salary', 'cert'],
                 ['search', 'search'],
                 ['activities', 'calendar'],
+                ['tasks', 'clock'],
+                ['training', 'calendar'],
+                ...(isHR(d)?[['directory','user']]:[]),
               ]
                 .map(([k, i]) => link(k, M.pages[k], 'shortcut', i))
                 .join('') +

@@ -50,7 +50,7 @@
     const route = location.hash.slice(1);
     page = Object.hasOwn(M.pages, route) ? route : 'profile';
     if (page === 'admin' && data.role !== 'admin') page = 'home';
-    if (page === 'hr' && !['hr','admin'].includes(data.role)) page = 'home';
+    if (['hr','directory'].includes(page) && !['hr','admin'].includes(data.role)) page = 'home';
     app.innerHTML = V.layout(data, page, V.page(data, page, adminTab));
     document.title = M.pages[page] + ' | บุคลากร มทร.อีสาน ขอนแก่น';
     if (page === 'signature') setupSignature();
@@ -160,6 +160,21 @@
       await D.login(vals.email, form.elements.password.value);
       authMode = 'login';
       await refresh();
+      return;
+    }
+    if (kind === 'training-submit') {
+      if(!data) throw Error('กรุณาเข้าสู่ระบบ');
+      await D.submitTraining(vals);
+      await refresh();
+      toast('ส่งประวัติการพัฒนาบุคลากรแล้ว');
+      return;
+    }
+    if (kind === 'training-review') {
+      if(!['hr','admin'].includes(data?.role)) throw Error('เฉพาะเจ้าหน้าที่ HR');
+      if(vals.status==='returned' && (vals.review_note||'').length<5) throw Error('กรุณาระบุเหตุผลอย่างน้อย 5 ตัวอักษร');
+      await D.reviewTraining(form.dataset.id, vals.status, vals.review_note);
+      await refresh();
+      toast('บันทึกผลการตรวจสอบแล้ว');
       return;
     }
     if (kind === 'assign-email-role') {
@@ -354,6 +369,14 @@
     if (f?.dataset.form === 'process' && t.name === 'status') syncProcess();
   });
   document.addEventListener('input', (ev) => {
+    const scope=ev.target.dataset.tableSearch;
+    if(scope){
+      const q=ev.target.value.trim().toLowerCase();
+      document.getElementById(scope)?.querySelectorAll('tbody tr').forEach(tr=>{
+        tr.hidden=!tr.textContent.toLowerCase().includes(q);
+      });
+      return;
+    }
     if (ev.target.name === 'search')
       document.querySelector('#results').innerHTML = V.orderTable(
         data,
@@ -508,6 +531,47 @@
         await D.cancelPendingEmailRole(email);
         await refresh();
         toast('ยกเลิกรายการรอสิทธิ์แล้ว');
+        return;
+      }
+      case 'training-review': {
+        if(!['hr','admin'].includes(data?.role)) throw Error('เฉพาะเจ้าหน้าที่ HR');
+        const r=(data.trainingRecords||[]).find(x=>x.id===id);
+        if(!r||r.status!=='submitted'||r.owner_id===data.id) throw Error('ไม่มีสิทธิ์ตรวจสอบรายการนี้');
+        const profile=data.profiles.find(x=>x.id===r.owner_id);
+        modal('<h2>ตรวจประวัติการพัฒนาบุคลากร</h2>'+
+          '<p><b>'+M.esc(r.title)+'</b></p><p>'+M.esc(M.person(profile))+' · '+M.esc(r.organizer)+' · '+M.esc(M.date(r.completed_on))+' · '+M.esc(r.hours)+' ชั่วโมง</p>'+
+          '<p class="multiline">'+M.esc(r.note||'ไม่มีหมายเหตุ')+'</p>'+
+          '<form data-form="training-review" data-id="'+M.esc(id)+'">'+
+          '<label class="field"><span>ผลการตรวจสอบ</span><select name="status"><option value="reviewed">ตรวจสอบแล้ว</option><option value="returned">ส่งคืนแก้ไข</option></select></label>'+
+          '<label class="field"><span>หมายเหตุ / เหตุผล</span><textarea name="review_note" maxlength="1000" rows="3"></textarea></label>'+
+          '<div class="actions"><button class="btn primary" type="submit">บันทึกผล</button></div></form>');
+        return;
+      }
+      case 'training-withdraw': {
+        const r=(data?.trainingRecords||[]).find(x=>x.id===id);
+        if(!r||r.owner_id!==data.id||r.status!=='submitted') throw Error('ถอนรายการไม่ได้');
+        if(!window.confirm('ยืนยันถอนประวัติอบรมที่รอตรวจสอบ?')) return;
+        await D.withdrawTraining(id);
+        await refresh();
+        toast('ถอนรายการแล้ว');
+        return;
+      }
+      case 'export-directory': {
+        if(!['hr','admin'].includes(data?.role)) throw Error('เฉพาะ HR และ ADMIN');
+        const t=document.querySelector('#personnel-directory table');
+        if(!t) throw Error('ไม่มีข้อมูลสำหรับส่งออก');
+        const rows=[...t.querySelectorAll('tr')].filter(tr=>!tr.hidden);
+        if(rows.length<2) throw Error('ไม่มีรายการที่ตรงกับการค้นหา');
+        const cell=v=>{
+          let s=String(v??'').trim();
+          if(/^[=+@\-]/.test(s)) s="'"+s;
+          return '"'+s.replace(/"/g,'""')+'"';
+        };
+        const csv='\uFEFF'+rows.map(tr=>[...tr.cells].map(td=>cell(td.textContent)).join(',')).join('\r\n');
+        const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+        const a=document.createElement('a');
+        a.href=url;a.download='RMUTI-KKC-personnel.csv';a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
         return;
       }
       case 'save-role': {

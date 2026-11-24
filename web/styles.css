@@ -1583,3 +1583,22 @@ dialog{border-color:#cbdcf0}
  .assign-email-role-form{grid-template-columns:1fr}
  .assign-email-role-form .field:first-child{grid-column:auto}
 }
+
+/* Personnel service modules */
+.module-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin:4px 0 18px}
+.module-metric{padding:16px;border:1px solid #dce6f4;border-radius:14px;background:#f8fbff;display:flex;flex-direction:column;gap:6px}
+.module-metric small{color:#526b89;font-weight:600}
+.module-metric strong{font-size:28px;line-height:1.2;color:#0b3579}
+.module-metric a{font-size:12px;font-weight:700}
+.module-metric:nth-child(2) strong{color:#c46712}
+.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.module-grid .field{margin:0}
+.module-search{display:flex;align-items:center;gap:9px;max-width:520px;margin:10px 0;color:#53739c}
+.module-search input{min-width:0;width:100%}
+.module-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:12px 0}
+.module-toolbar .module-search{flex:1;min-width:min(260px,100%);margin:0}
+.training-state{display:inline-flex;border-radius:50px;background:#fff2df;color:#925504;padding:5px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.training-state.reviewed{background:#e5f8ed;color:#176b45}
+.training-state.returned{background:#ffeded;color:#a12f30}
+tr[hidden]{display:none!important}
+@media(max-width:650px){.module-grid{grid-template-columns:1fr}.module-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}

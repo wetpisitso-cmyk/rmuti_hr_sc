@@ -1275,7 +1275,10 @@ window.HRViews = (() => {
           ['contact','โทรศัพท์','043-283700 (ระบบอัตโนมัติ) ต่อ 1211 — แผนกงานบริหารงานบุคคล'],
           ['clock','เวลาทำการ','วันจันทร์–วันศุกร์ เวลา 08.30–16.30 น.'],
           ['globe','เว็บไซต์หน่วยงาน','งานบริหารทรัพยากร และเว็บไซต์วิทยาเขตขอนแก่น']
-        ])+'<div class="public-info-buttons">'+linkOut(contact,'เว็บไซต์และหมายเลขติดต่อหน่วยงาน')+linkOut(campus,'ช่องทางติดต่อวิทยาเขต')+'</div><p class="public-info-source">ที่มา: เว็บไซต์งานบริหารทรัพยากร มทร.อีสาน วิทยาเขตขอนแก่น · หากหมายเลขติดต่อมีการเปลี่ยนแปลง โปรดตรวจสอบจากเว็บไซต์หน่วยงาน</p>';
+        ])+'<div class="public-info-grid">'+
+        '<article class="public-info-card"><span class="public-info-icon" style="background:#eaf2ff;color:#1877f2"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.88 3.78-3.88 1.1 0 2.24.2 2.24.2v2.46H15.2c-1.24 0-1.64.77-1.64 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></span><div><h3>Facebook แผนกงานบริหารงานบุคคล</h3><p>ติดตามข่าวสาร ประกาศ และประชาสัมพันธ์งานบุคลากร</p>'+linkOut('https://www.facebook.com/hr.rmutikkc','เปิด Facebook HR KKC')+'</div></article>'+
+        '<article class="public-info-card"><span class="public-info-icon">'+ic('brief',23)+'</span><div><h3>ระบบสมัครงานออนไลน์</h3><p>ตรวจสอบประกาศรับสมัคร สมัครงาน และติดตามข้อมูลการรับสมัครบุคลากร มทร.อีสาน วิทยาเขตขอนแก่น</p>'+linkOut('https://wetpisitso-cmyk.github.io/rmuti.hr.kkc/','เข้าสู่ระบบสมัครงานออนไลน์')+'</div></article>'+
+        '</div><div class="public-info-buttons">'+linkOut(contact,'เว็บไซต์และหมายเลขติดต่อหน่วยงาน')+linkOut(campus,'ช่องทางติดต่อวิทยาเขต')+'</div><p class="public-info-source">ที่มา: เว็บไซต์งานบริหารทรัพยากร มทร.อีสาน วิทยาเขตขอนแก่น · หากหมายเลขติดต่อมีการเปลี่ยนแปลง โปรดตรวจสอบจากเว็บไซต์หน่วยงาน</p>';
         break;
       case 'help':
         title='คู่มือการใช้งานเบื้องต้น';sub='QUICK START GUIDE';icon='help';

@@ -558,6 +558,13 @@ window.HRData = (() => {
     if(result.error){let msg='ตรวจสอบการเชื่อมต่อไม่สำเร็จ';try{msg=(await result.error.context?.json())?.error||msg}catch{}throw Error(msg)}
     return result.data;
   }
+  async function createDirectCertificate(p) {
+    if(demo)throw Error('กรุณาใช้ระบบจริง');
+    return ok(await db().from('hr_requests').insert({
+      id:M.uuid(),owner_id:p.owner_id||null,subject_name:p.owner_id?null:p.subject_name,
+      hr_created:true,kind:'salary',purpose:p.purpose,copies:Number(p.copies)
+    }).select('id').single());
+  }
   async function saveSalaryDraft(id,fields,content) {
     if(demo)throw Error('กรุณาใช้ระบบจริง');
     return ok(await db().rpc('hr_salary_save_draft',{p_request_id:id,p_fields:fields,p_content:content}));
@@ -609,5 +616,5 @@ window.HRData = (() => {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
     return e?.message || 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง';
   }
-  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, saveSalaryDraft, submitSalaryDraft, executiveSummary, driveCheck, setDuties };
+  return { demo, load, save, login, signup, resetPassword, updatePassword, logout, download, message, proposeDocument, advanceDocument, reviseDocument, setUserRole, assignEmailRole, cancelPendingEmailRole, submitTraining, reviewTraining, withdrawTraining, submitHistory, reviewHistory, withdrawHistory, createDirectCertificate, saveSalaryDraft, submitSalaryDraft, executiveSummary, driveCheck, setDuties };
 })();

@@ -1084,15 +1084,16 @@ window.HRViews = (() => {
     return r.status==='submitted'?'inbox':'draft';
   }
   const salaryLabels={inbox:'รอรับเรื่อง',draft:'กำลังจัดทำเอกสาร',approval:'รอตรวจสอบ / อนุมัติ',sign:'รอลงนาม',signed:'ลงนามภายในแล้ว — รอออกหนังสือ',issued:'พร้อมรับ / รับแล้ว',returned:'ส่งคืน / ไม่อนุมัติเอกสาร',rejected:'ส่งคืนคำขอ'};
+  const certificatePerson=(d,r)=>r.subject_name||personOf(d,r.owner_id);
   function salaryDashboard(d){
     const list=d.requests||[], tally=k=>list.filter(r=>salaryStage(d,r)===k).length;
     const cards=[['inbox','รอรับเรื่อง','file',tally('inbox')],['draft','กำลังจัดทำเอกสาร','pen',tally('draft')+tally('approval')+tally('returned')],['sign','รอลงนาม','pen',tally('sign')],['issued','ออกหนังสือแล้ว / พร้อมรับ','check',tally('issued')]];
     const rows=recent(list).map(r=>[
-      '<b class="ref">'+e(num(r))+'</b>',e(M.kinds[r.kind]),e(personOf(d,r.owner_id)),e(M.date(r.created_at)),
+      '<b class="ref">'+e(num(r))+'</b>',e(M.kinds[r.kind]),e(certificatePerson(d,r))+(r.hr_created?' <small>HR ออกให้</small>':''),e(M.date(r.created_at)),
       '<span class="salary-stage salary-'+salaryStage(d,r)+'">'+e(salaryLabels[salaryStage(d,r)])+'</span>',
       r.kind==='salary'&&['submitted','review'].includes(r.status)?btn('จัดทำหนังสือ','salary-editor',r.id,'primary','file')+' '+btn('รายละเอียด','request-detail',r.id):btn('รายละเอียด','request-detail',r.id)
     ]);
-    return '<div class="salary-metrics">'+cards.map(([key,label,icon,count])=>'<div class="salary-metric salary-'+key+'">'+ic(icon,24)+'<strong>'+count+'</strong><span>'+e(label)+'</span></div>').join('')+'</div>'+
+    return '<div class="toolbar">'+btn('ออกหนังสือรับรองใหม่','direct-certificate','','primary','file')+'</div><div class="salary-metrics">'+cards.map(([key,label,icon,count])=>'<div class="salary-metric salary-'+key+'">'+ic(icon,24)+'<strong>'+count+'</strong><span>'+e(label)+'</span></div>').join('')+'</div>'+
     '<p class="intro">ลงนามภายในแล้ว รอเจ้าหน้าที่ออกหนังสือ: '+tally('signed')+' รายการ · คำขอส่งคืน: '+tally('rejected')+' รายการ</p>'+
     note('เลือก “จัดทำหนังสือ” สำหรับคำขอรับรองเงินเดือน จากนั้นบันทึกร่าง ดูตัวอย่าง A4 และเสนออนุมัติ เอกสารประเภทอื่นยังดำเนินการแบบเดิม')+
     tableSearch('salary-queue','ค้นหาเลขคำขอ / ชื่อ / ประเภทหนังสือ')+'<div id="salary-queue">'+table(['เลขคำขอ','ประเภทหนังสือ','ผู้ขอ','วันที่ยื่น','สถานะ','ดำเนินการ'],rows,'ยังไม่มีคำขอ')+'</div>';
@@ -1109,10 +1110,10 @@ window.HRViews = (() => {
     const val=(k,fallback='')=>e(x[k]??fallback);
     const officers=(d.officers||[]).filter(o=>o.id!==d.id);
     const choices=(name,title,required=false)=>field(title,'<select name="'+name+'" '+(required?'required':'')+'><option value="">ยังไม่กำหนด</option>'+officers.filter(o=>(o.duties||[]).includes(name.replace('_id',''))).map(o=>'<option value="'+e(o.id)+'" '+(x[name]===o.id?'selected':'')+'>'+e(o.display_name)+'</option>').join('')+'</select>');
-    return '<header class="salary-editor-head"><div><small>จัดทำหนังสือรับรองเงินเดือน</small><h2>'+e(num(r))+' — '+e(personOf(d,r.owner_id))+'</h2></div>'+badge(r.status)+'</header>'+
+    return '<header class="salary-editor-head"><div><small>จัดทำหนังสือรับรองเงินเดือน</small><h2>'+e(num(r))+' — '+e(certificatePerson(d,r))+'</h2></div>'+badge(r.status)+'</header>'+
       note('ตรวจสอบข้อมูลกับทะเบียนและเงินเดือนจริงก่อนบันทึก ข้อมูลจากโปรไฟล์เป็นข้อมูลที่บุคลากรกรอกเอง')+
       '<form data-form="salary-draft" data-id="'+e(r.id)+'"><div class="module-grid">'+
-      field('ชื่อ–นามสกุล',input('person_name','required maxlength="200" value="'+val('person_name',M.person(p))+'"'))+
+      field('ชื่อ–นามสกุล',input('person_name','required maxlength="200" value="'+val('person_name',r.subject_name||M.person(p))+'"'))+
       field('ตำแหน่ง',input('position','required maxlength="200" value="'+val('position',p?.position||'')+'"'))+
       field('ประเภทบุคลากร',input('staff_type','required maxlength="120" value="'+val('staff_type',p?.staff_type||'')+'"'))+
       field('สังกัด',input('organization','required maxlength="300" value="'+val('organization',[org?.faculty,org?.division,org?.unit].filter(Boolean).join(' / '))+'"'))+
@@ -1150,7 +1151,9 @@ window.HRViews = (() => {
       '</header><dl>' +
       [
         ['ประเภทเอกสาร', M.kinds[r.kind]],
-        ['ผู้ยื่นคำขอ', personOf(d, r.owner_id)],
+        ['ผู้รับหนังสือ', certificatePerson(d,r)],
+        ['ช่องทาง', r.hr_created?'เจ้าหน้าที่ออกให้':'บุคลากรยื่นเอง'],
+        ...(r.hr_created && ['hr','admin'].includes(d.role)?[['เจ้าหน้าที่ผู้สร้าง',personOf(d,r.created_by)]]:[]),
         ['วันที่ยื่นคำขอ', M.date(r.created_at, true)],
         ['วัตถุประสงค์', r.purpose],
         ['จำนวน', r.copies + ' ฉบับ'],

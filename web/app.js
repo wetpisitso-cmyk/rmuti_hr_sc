@@ -179,6 +179,16 @@
       await refresh();
       return;
     }
+    if(kind==='direct-certificate'){
+      if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+      if(!vals.owner_id&&!vals.subject_name)throw Error('กรุณาเลือกบุคลากรหรือกรอกชื่อ');
+      if(vals.owner_id&&!data.profiles.some(p=>p.id===vals.owner_id))throw Error('ไม่พบบุคลากร');
+      const result=await D.createDirectCertificate(vals);
+      await refresh();
+      const r=data?.requests.find(v=>v.id===result.id);
+      if(r)modal(V.salaryEditor(data,r));
+      toast('สร้างรายการแล้ว กรุณากรอกข้อมูลหนังสือ');return;
+    }
     if(kind==='salary-draft'){
       if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
       const r=data.requests.find(v=>v.id===form.dataset.id);
@@ -566,6 +576,10 @@
         const r=data.workflows.find(x=>x.id===id);
         if (r) modal(HRWorkflow.detail(data,r));
         return;
+      }
+      case 'direct-certificate': {
+        if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
+        modal('<h2>ออกหนังสือรับรองเงินเดือนโดยเจ้าหน้าที่</h2><p class="intro">สร้างได้โดยไม่ต้องรอคำขอจากบุคลากร และยังผ่านขั้นตอนอนุมัติเดิม</p><form data-form="direct-certificate"><div class="module-grid"><label>เลือกบุคลากรในระบบ<select name="owner_id"><option value="">ไม่มีบัญชี / กรอกชื่อเอง</option>'+data.profiles.map(p=>'<option value="'+M.esc(p.id)+'">'+M.esc(M.person(p))+'</option>').join('')+'</select></label><label>ชื่อ–นามสกุล (กรณีไม่มีบัญชี)<input name="subject_name" maxlength="200"></label><label>วัตถุประสงค์<input name="purpose" required maxlength="600"></label><label>จำนวนฉบับ<input name="copies" type="number" min="1" max="5" value="1" required></label></div><button type="submit" class="btn primary">สร้างและจัดทำหนังสือ</button></form>');return;
       }
       case 'salary-editor': {
         if(!['hr','admin'].includes(data?.role))throw Error('เฉพาะ HR');
